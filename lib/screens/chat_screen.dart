@@ -5,7 +5,6 @@ import 'package:chatapp/globals.dart';
 
 class ChatPage extends StatefulWidget {
   final Friend friend;
-
   const ChatPage({super.key, required this.friend});
 
   @override
@@ -20,13 +19,14 @@ class _ChatPageState extends State<ChatPage> {
   void initState() {
     super.initState();
     _loadMessages();
+    ChatService.setCallback(_receiveMessage);
   }
 
   // load messages
   void _loadMessages() {
     setState(() {
       _messages = widget.friend.historyMessage;
-      _messages.sort((a, b) => a.timestamp!.compareTo(b.timestamp!)); // 按时间升序排列
+      _messages.sort((a, b) => b.messageId!.compareTo(a.messageId!));
     });
   }
 
@@ -34,9 +34,7 @@ class _ChatPageState extends State<ChatPage> {
   void _sendMessage(String content) {
     if (content.isEmpty) return;
     setState(() {
-      ChatService.sendMessage(content, widget.friend.friendId);
       final messageId = _messages.length + 1;
-
       final newMessage = Message(
           messageId: messageId,
           senderId: CurrentUser.instance.userId,
@@ -46,12 +44,26 @@ class _ChatPageState extends State<ChatPage> {
           timestamp: DateTime.now().toIso8601String());
       _messages.add(newMessage);
       _controller.clear();
+      if (widget.friend.isbot == 0) {
+        ChatService.sendMessage(content, widget.friend.friendId);
+      } else {
+        ChatService.sendMessageToBot(_messages, widget.friend.friendId);
+      }
     });
     // 发送消息后自动滚动到底部
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
         _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
       }
+    });
+  }
+
+  void _receiveMessage(Message newMessage) {
+    setState(() {
+      newMessage.messageId = _messages.length + 1;
+      _messages.add(newMessage);
+      _messages
+          .sort((a, b) => b.messageId!.compareTo(a.messageId!)); // 保证按时间顺序排列
     });
   }
 

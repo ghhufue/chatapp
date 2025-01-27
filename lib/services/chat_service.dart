@@ -10,8 +10,12 @@ enum DatabaseType {
 }
 
 class ChatService {
-  static late WebSocketChannel _channel; // WebSocketChannel 实例
-  // 初始化 WebSocket 连接
+  static late WebSocketChannel _channel;
+  static Function(Message)? onNewMessage;
+  static void setCallback(Function(Message) func) {
+    onNewMessage = func;
+  }
+
   static void connect() {
     _channel = WebSocketChannel.connect(Uri.parse(wsUrl));
     logger.i('Connected to WebSocket server at $wsUrl');
@@ -75,6 +79,7 @@ class ChatService {
       final Map<String, dynamic> decodedJson = jsonDecode(response.body);
       if (decodedJson.containsKey('messages')) {
         final List<dynamic> data = decodedJson['messages'];
+        //logger.i(data);
         return data.map((json) => Message.fromJson(json)).toList();
       } else {
         throw Exception('Key "messages" not found in response');
@@ -95,5 +100,38 @@ class ChatService {
     });
   }
 
-  static void handleMessage(String message) {}
+  static Future<void> sendMessageToBot(
+      List<Message> messages, int? receiverId) async {
+    final List<Map<String, dynamic>> messagesJson =
+        messages.map((message) => message.toJson()).toList();
+    final Map<String, dynamic> data = {
+      "type": "sendMessage",
+      "token": "${CurrentUser.instance.token}",
+      "receiverId": receiverId,
+      "historyMessages": messagesJson,
+    };
+    final String jsonData = jsonEncode(data);
+    try {
+      _channel.sink.add(jsonData);
+    } catch (error) {
+      logger.e('Error sending messages to bots: $error');
+    }
+  }
+
+  static void handleMessage(String message) {
+    Message receivedMessage = getMessage(jsonDecode(message));
+    if (onNewMessage != null) {
+      onNewMessage!(receivedMessage);
+    }
+  }
+
+  static Message getMessage(Map<String, dynamic> response) {
+    return Message(
+        messageId: null,
+        senderId: response["receiver_id"],
+        receiverId: CurrentUser.instance.userId,
+        content: response["response"],
+        messageType: "text",
+        timestamp: response["timestamp"]);
+  }
 }
