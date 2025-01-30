@@ -49,6 +49,12 @@ class ChatService {
     _channel.sink.add(data);
   }
 
+  static void readMessage(int? senderId) {
+    final data =
+        '{"type": "readMessage","senderId":$senderId,"token":"${CurrentUser.instance.token}"}';
+    _channel.sink.add(data);
+  }
+
   void receiveMessage(String message, String senderId) {}
   void sendFriendRequest(String friendId) {
     final data = '{"type":"sendFriendRequest","receiverId":$friendId}';
