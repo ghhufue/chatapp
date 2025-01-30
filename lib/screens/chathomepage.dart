@@ -8,6 +8,16 @@ import 'package:cached_network_image/cached_network_image.dart';
 
 var logger = Logger();
 
+String _getImageUrl(String? avatarUrl) {
+  if (avatarUrl == null || avatarUrl.isEmpty) {
+    return 'assets/default_avatar.png';
+  } else {
+    // 添加时间戳参数，避免缓存问题
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    return '$avatarUrl?t=$timestamp';
+  }
+}
+
 class FriendListPage extends StatefulWidget {
   const FriendListPage({super.key});
 
@@ -91,25 +101,38 @@ class FriendTile extends StatelessWidget {
       formattedTime = DateFormat('MM-dd HH:mm').format(messageTime);
     }
 
-    CachedNetworkImage.evictFromCache(friend.avatar!); // 清除图片缓存
-
     return ListTile(
       leading: CircleAvatar(
-          radius: 25,
-          child: friend.avatar != null
-              ? ClipOval(
-                  child: CachedNetworkImage(
-                  imageUrl: friend.avatar!,
-                  httpHeaders: {"Access-Control-Allow-Origin": "*"},
-                  placeholder: (context, url) =>
-                      CircularProgressIndicator(), // 加载时的占位符
-                  errorWidget: (context, url, error) =>
-                      Icon(Icons.error), // 加载失败时的占位符
-                  fit: BoxFit.cover,
+        radius: 25,
+        child: friend.avatar != null
+            ? ClipOval(
+                child: CachedNetworkImage(
+                imageUrl: _getImageUrl(friend.avatar), // 处理 URL（见下方代码）
+                httpHeaders: {
+                  // 声明跨域请求模式（需与服务器 CORS 配置匹配）
+                  "Access-Control-Allow-Origin": "*", // 为啥不管用（恼
+                  "Origin": "anonymous", // 新加的，希望有用🙏
+                },
+                placeholder: (context, url) => Container(
                   width: 50,
                   height: 50,
-                ))
-              : Icon(Icons.error)),
+                  alignment: Alignment.center,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+                errorWidget: (context, url, error) => Container(
+                  width: 50,
+                  height: 50,
+                  alignment: Alignment.center,
+                  child: Icon(Icons.error, size: 20),
+                ),
+              ))
+            : Container(
+                width: 50,
+                height: 50,
+                alignment: Alignment.center,
+                child: Icon(Icons.error, size: 20),
+              ),
+      ),
       title: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
