@@ -226,3 +226,22 @@ mysql -u remote_user -p -h chatappdb.yht20050302.top -P 53578
 | `message_type` | `varchar(10)` | 消息类型，默认值为 `'text'`，可能的值为 `'text'` 或其他类型。 |
 | `timestamp`    | `datetime`    | 消息的发送时间，默认为当前时间。                              |
 | `is_received`  | `tinyint(1)`  | 消息是否已接收，`0` 表示未接收，`1` 表示已接收。              |
+
+---
+
+# 大模型
+
+## 本次需要构建的大模型需要具有以下特点：
+
+- 碎片化，口语化，网络化的语言风格，模仿人类在社交媒体上聊天时的风格
+- 回复更加关注用户的话语中的情感，心情，结合用户的经历进行回复
+- 需要有个性化的回复，建立大模型个体的性格，喜好
+
+## 参考资料
+
+大模型的构建将在 Chatglm3-6B 的基础上进行微调和训练，以下是可供参考的资料：
+
+- [Chatglm3-6B Github Page](https://github.com/THUDM/ChatGLM-6B)
+- [HuggingFace](https://huggingface.co/THUDM/chatglm-6b)
+- [Modelscope](https://www.modelscope.cn/models/ZhipuAI/chatglm3-6b)
+- [智普 ai 开发文档](https://zhipu-ai.feishu.cn/wiki/WvQbwIJ9tiPAxGk8ywDck6yfnof)
