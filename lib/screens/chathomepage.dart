@@ -4,6 +4,7 @@ import 'package:logger/logger.dart';
 import 'package:chatapp/globals.dart';
 import 'package:intl/intl.dart';
 import 'chat_screen.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 var logger = Logger();
 
@@ -90,13 +91,24 @@ class FriendTile extends StatelessWidget {
       formattedTime = DateFormat('MM-dd HH:mm').format(messageTime);
     }
 
+    CachedNetworkImage.evictFromCache(friend.avatar!); // 清除图片缓存
+
     return ListTile(
       leading: CircleAvatar(
-        radius: 25,
-        backgroundImage: friend.avatar != null
-            ? NetworkImage(friend.avatar!)
-            : AssetImage('assets/default_avatar.png') as ImageProvider,
-      ),
+          radius: 25,
+          child: friend.avatar != null
+              ? ClipOval(
+                  child: CachedNetworkImage(
+                  imageUrl: friend.avatar!,
+                  placeholder: (context, url) =>
+                      CircularProgressIndicator(), // 加载时的占位符
+                  errorWidget: (context, url, error) =>
+                      Icon(Icons.error), // 加载失败时的占位符
+                  fit: BoxFit.cover,
+                  width: 50,
+                  height: 50,
+                ))
+              : Icon(Icons.error)),
       title: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
