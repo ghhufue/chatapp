@@ -9,13 +9,9 @@ import 'package:cached_network_image/cached_network_image.dart';
 var logger = Logger();
 
 String _getImageUrl(String? avatarUrl) {
-  if (avatarUrl == null || avatarUrl.isEmpty) {
-    return 'assets/default_avatar.png';
-  } else {
-    // 添加时间戳参数，避免缓存问题
-    final timestamp = DateTime.now().millisecondsSinceEpoch;
-    return '$avatarUrl?t=$timestamp';
-  }
+  // 添加时间戳参数，避免缓存问题
+  final timestamp = DateTime.now().millisecondsSinceEpoch;
+  return '$avatarUrl?t=$timestamp';
 }
 
 class FriendListPage extends StatefulWidget {
@@ -104,7 +100,7 @@ class FriendTile extends StatelessWidget {
     return ListTile(
       leading: CircleAvatar(
         radius: 25,
-        child: friend.avatar != null
+        child: friend.avatar == null || friend.avatar!.isEmpty
             ? ClipOval(
                 child: CachedNetworkImage(
                 imageUrl: _getImageUrl(friend.avatar), // 处理 URL（见下方代码）
