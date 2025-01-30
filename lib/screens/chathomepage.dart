@@ -4,7 +4,7 @@ import 'package:logger/logger.dart';
 import 'package:chatapp/globals.dart';
 import 'package:intl/intl.dart';
 import 'chat_screen.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+// import 'package:cached_network_image/cached_network_image.dart';
 
 var logger = Logger();
 
