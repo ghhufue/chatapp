@@ -108,9 +108,6 @@ class FriendTile extends StatelessWidget {
                   fit: BoxFit.cover,
                   width: 50,
                   height: 50,
-                  httpHeaders: {
-                    'Access-Control-Allow-Origin': '*',
-                  },
                 ))
               : Icon(Icons.error)),
       title: Row(
