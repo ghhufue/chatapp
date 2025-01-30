@@ -100,6 +100,7 @@ class FriendTile extends StatelessWidget {
               ? ClipOval(
                   child: CachedNetworkImage(
                   imageUrl: friend.avatar!,
+                  httpHeaders: {"Access-Control-Allow-Origin": "*"},
                   placeholder: (context, url) =>
                       CircularProgressIndicator(), // 加载时的占位符
                   errorWidget: (context, url, error) =>
