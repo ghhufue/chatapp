@@ -43,9 +43,10 @@ class ChatService {
   }
 
   // 发送消息
-  static void sendMessage(String? message, int? receiverId) {
+  static void sendMessage(
+      String? message, String? messageType, int? receiverId) {
     final data =
-        '{"type": "sendMessage","content":"$message","receiverId":$receiverId,"token":"${CurrentUser.instance.token}"}';
+        '{"type": "sendMessage","content":"$message","message_type":"$messageType","receiverId":$receiverId,"token":"${CurrentUser.instance.token}"}';
     _channel.sink.add(data);
   }
 
