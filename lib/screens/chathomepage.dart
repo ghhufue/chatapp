@@ -95,24 +95,10 @@ class FriendTile extends StatelessWidget {
     // 格式化时间，仅显示 "MM-dd HH:mm" 的格式
     String? formattedTime;
     if (lastMessage != null && lastMessage.timestamp != null) {
-      final DateTime messageTime = DateTime.parse(lastMessage.timestamp!);
+      final DateTime messageTime =
+          DateTime.parse(lastMessage.timestamp!).toLocal();
       formattedTime = DateFormat('MM-dd HH:mm').format(messageTime);
     }
-
-    /*
-    final avatarProvider = CachedNetworkImageProvider(
-      friend.avatar!,
-      headers: {
-        // 声明跨域请求模式（需与服务器 CORS 配置匹配）
-        "Access-Control-Allow-Origin": "*", // 为啥不管用（恼
-        "Origin": "anonymous", // 新加的，希望有用🙏
-      },
-      cacheKey: "circle_avatar",
-      maxWidth: 50,
-      maxHeight: 50,
-    );
-    avatarProvider.evict();
-    */
 
     return ListTile(
       leading: CircleAvatar(
@@ -125,7 +111,6 @@ class FriendTile extends StatelessWidget {
                 headers: {
                   // 声明跨域请求模式（需与服务器 CORS 配置匹配）
                   "Access-Control-Allow-Origin": "*",
-                  // "Origin": "https://", // 没用
                 },
                 width: 50,
                 height: 50,

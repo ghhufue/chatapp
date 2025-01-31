@@ -3,6 +3,7 @@ import 'package:chatapp/user/user.dart';
 import '../services/chat_service.dart';
 import 'package:chatapp/globals.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ChatPage extends StatefulWidget {
   final Friend friend;
@@ -138,26 +139,37 @@ class _ChatPageState extends State<ChatPage> {
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
-                                        Image.network(
-                                          message.content!,
-                                          headers: {
-                                            // 声明跨域请求模式（需与服务器 CORS 配置匹配）
-                                            "Access-Control-Allow-Origin": "*",
-                                          },
-                                          width: 200,
-                                          loadingBuilder:
-                                              (context, child, progress) {
-                                            return progress == null
-                                                ? child
-                                                : Center(
-                                                    child:
-                                                        CircularProgressIndicator());
-                                          },
-                                          errorBuilder:
-                                              (context, error, stackTrace) {
-                                            return Icon(Icons.broken_image,
-                                                size: 50);
-                                          },
+                                        InkWell(
+                                          onTap: () =>
+                                              _launchURL(message.content!),
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                          child: ClipRRect(
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                            child: Image.network(
+                                              message.content!,
+                                              headers: {
+                                                // 声明跨域请求模式（需与服务器 CORS 配置匹配）
+                                                "Access-Control-Allow-Origin":
+                                                    "*",
+                                              },
+                                              width: 200,
+                                              loadingBuilder:
+                                                  (context, child, progress) {
+                                                return progress == null
+                                                    ? child
+                                                    : Center(
+                                                        child:
+                                                            CircularProgressIndicator());
+                                              },
+                                              errorBuilder:
+                                                  (context, error, stackTrace) {
+                                                return Icon(Icons.broken_image,
+                                                    size: 50);
+                                              },
+                                            ),
+                                          ),
                                         ),
                                         SizedBox(height: 4),
                                         Text(
@@ -281,6 +293,16 @@ class _ChatPageState extends State<ChatPage> {
       return DateFormat('MM-dd HH:mm').format(date);
     } catch (e) {
       return e.toString(); // 异常处理
+    }
+  }
+
+  Future<void> _launchURL(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(
+        uri,
+        webOnlyWindowName: '_blank', // Web 专用：在新标签页打开
+      );
     }
   }
 }
