@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:chatapp/user/user.dart';
 import '../services/chat_service.dart';
 import 'package:chatapp/globals.dart';
+import 'package:intl/intl.dart';
 
 class ChatPage extends StatefulWidget {
   final Friend friend;
@@ -92,28 +93,124 @@ class _ChatPageState extends State<ChatPage> {
                 return Align(
                   alignment:
                       isSentByMe ? Alignment.centerRight : Alignment.centerLeft,
-                  child: Container(
-                    padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                    margin: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-                    decoration: BoxDecoration(
-                      color: isSentByMe ? Colors.blue[200] : Colors.grey[300],
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          message.content ?? '',
-                          style: TextStyle(fontSize: 16),
-                        ),
-                        SizedBox(height: 4),
-                        Text(
-                          _formatTimestamp(message.timestamp),
-                          style: TextStyle(fontSize: 12, color: Colors.grey),
-                        ),
-                      ],
-                    ),
-                  ),
+                  child: message.messageType == "text" // 信息类型是文本
+                      ? Container(
+                          padding:
+                              EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                          margin:
+                              EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                          decoration: BoxDecoration(
+                            color: isSentByMe
+                                ? Colors.blue[200]
+                                : Colors.grey[300],
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                message.content ?? '',
+                                style: TextStyle(fontSize: 16),
+                              ),
+                              SizedBox(height: 4),
+                              Text(
+                                _formatTimestamp(message.timestamp),
+                                style:
+                                    TextStyle(fontSize: 12, color: Colors.grey),
+                              ),
+                            ],
+                          ),
+                        )
+                      : message.messageType == "image" // 信息类型是图片
+                          ? message.content != null
+                              ? Container(
+                                  padding: EdgeInsets.symmetric(
+                                      vertical: 8, horizontal: 12),
+                                  margin: EdgeInsets.symmetric(
+                                      vertical: 4, horizontal: 8),
+                                  decoration: BoxDecoration(
+                                    color: isSentByMe
+                                        ? Colors.blue[200]
+                                        : Colors.grey[300],
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Image.network(
+                                          message.content!,
+                                          headers: {
+                                            // 声明跨域请求模式（需与服务器 CORS 配置匹配）
+                                            "Access-Control-Allow-Origin": "*",
+                                          },
+                                          width: 200,
+                                          loadingBuilder:
+                                              (context, child, progress) {
+                                            return progress == null
+                                                ? child
+                                                : Center(
+                                                    child:
+                                                        CircularProgressIndicator());
+                                          },
+                                          errorBuilder:
+                                              (context, error, stackTrace) {
+                                            return Icon(Icons.broken_image,
+                                                size: 50);
+                                          },
+                                        ),
+                                        SizedBox(height: 4),
+                                        Text(
+                                          _formatTimestamp(message.timestamp),
+                                          style: TextStyle(
+                                              fontSize: 12, color: Colors.grey),
+                                        ),
+                                      ]))
+                              : Container(
+                                  padding: EdgeInsets.symmetric(
+                                      vertical: 8, horizontal: 12),
+                                  margin: EdgeInsets.symmetric(
+                                      vertical: 4, horizontal: 8),
+                                  decoration: BoxDecoration(
+                                    color: isSentByMe
+                                        ? Colors.blue[200]
+                                        : Colors.grey[300],
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Icon(Icons.broken_image, size: 50),
+                                        SizedBox(height: 4),
+                                        Text(
+                                          _formatTimestamp(message.timestamp),
+                                          style: TextStyle(
+                                              fontSize: 12, color: Colors.grey),
+                                        ),
+                                      ]))
+                          : Container(
+                              padding: EdgeInsets.symmetric(
+                                  vertical: 8, horizontal: 12),
+                              margin: EdgeInsets.symmetric(
+                                  vertical: 4, horizontal: 8),
+                              decoration: BoxDecoration(
+                                color: isSentByMe
+                                    ? Colors.blue[200]
+                                    : Colors.grey[300],
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Icon(Icons.error, size: 50),
+                                    SizedBox(height: 4),
+                                    Text(
+                                      _formatTimestamp(message.timestamp),
+                                      style: TextStyle(
+                                          fontSize: 12, color: Colors.grey),
+                                    ),
+                                  ])),
                 );
               },
             ),
@@ -147,8 +244,8 @@ class _ChatPageState extends State<ChatPage> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        onPressed: () => (),
-                        child: Center(child: Icon(Icons.image)))), // TODO
+                        onPressed: () => (), // TODO
+                        child: Center(child: Icon(Icons.image)))),
                 SizedBox(width: 8),
                 SizedBox(
                     width: 50,
@@ -174,9 +271,16 @@ class _ChatPageState extends State<ChatPage> {
 
   // 格式化时间
   String _formatTimestamp(String? timestamp) {
-    if (timestamp == null) return '';
-    final DateTime date = DateTime.parse(timestamp);
-    final TimeOfDay time = TimeOfDay.fromDateTime(date);
-    return '${date.month}-${date.day} ${time.format(context)}';
+    // logger.i('Timestamp: $timestamp');
+    try {
+      if (timestamp == null) throw 'No time';
+      // 解析原始格式的字符串
+      final DateTime date =
+          DateTime.parse(timestamp).toLocal(); // 原来这里有问题，改了下，现在显示的时间就对了
+      // 转换为目标格式
+      return DateFormat('MM-dd HH:mm').format(date);
+    } catch (e) {
+      return e.toString(); // 异常处理
+    }
   }
 }
