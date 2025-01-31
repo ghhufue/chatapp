@@ -4,6 +4,7 @@ import '../services/chat_service.dart';
 import 'package:chatapp/globals.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'chat_screen_image.dart';
 
 class ChatPage extends StatefulWidget {
   final Friend friend;
@@ -47,7 +48,7 @@ class _ChatPageState extends State<ChatPage> {
       _messages.add(newMessage);
       _controller.clear();
       if (widget.friend.isbot == 0) {
-        ChatService.sendMessage(content, widget.friend.friendId);
+        ChatService.sendMessage(content, "text", widget.friend.friendId);
       } else {
         ChatService.sendMessageToBot(_messages, widget.friend.friendId);
       }
@@ -165,6 +166,8 @@ class _ChatPageState extends State<ChatPage> {
                                               },
                                               errorBuilder:
                                                   (context, error, stackTrace) {
+                                                logger.e(
+                                                    'Failed to get image on ${message.content}');
                                                 return Icon(Icons.broken_image,
                                                     size: 50);
                                               },
@@ -256,7 +259,11 @@ class _ChatPageState extends State<ChatPage> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        onPressed: () => (), // TODO
+                        onPressed: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) =>
+                                    ChatImagePage(friend: widget.friend))),
                         child: Center(child: Icon(Icons.image)))),
                 SizedBox(width: 8),
                 SizedBox(

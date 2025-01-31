@@ -150,11 +150,15 @@ class FriendTile extends StatelessWidget {
         ],
       ),
       subtitle: lastMessage != null
-          ? Text(
-              lastMessage.content ?? '',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            )
+          ? lastMessage.messageType == "text"
+              ? Text(
+                  lastMessage.content ?? '',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                )
+              : lastMessage.messageType == "image"
+                  ? Text('[Image]') // 如果是图片就显示图片
+                  : Text('[Unsupported Message]') // 如果是其他的，那就是暂不支持
           : Text('No messages yet'), // 如果没有消息
       onTap: () {
         // 点击好友项时的操作，比如进入聊天详情页

@@ -42,6 +42,8 @@ dependencies:
   intl: ^0.20.1
   crypto: ^3.0.6
   url_launcher:
+  file_picker:
+  mime_type: ^1.0.0
   # cached_network_image: ^3.2.3
 
 dev_dependencies:
