@@ -4,9 +4,17 @@ import 'package:logger/logger.dart';
 import 'package:chatapp/globals.dart';
 import 'package:intl/intl.dart';
 import 'chat_screen.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+// import 'package:cached_network_image/cached_network_image.dart';
 
 var logger = Logger();
+
+/*
+String _getImageUrl(String? avatarUrl) {
+  // 添加时间戳参数，避免缓存问题
+  final timestamp = DateTime.now().millisecondsSinceEpoch;
+  return '$avatarUrl?t=$timestamp';
+}
+*/
 
 class FriendListPage extends StatefulWidget {
   const FriendListPage({super.key});
@@ -91,25 +99,52 @@ class FriendTile extends StatelessWidget {
       formattedTime = DateFormat('MM-dd HH:mm').format(messageTime);
     }
 
-    CachedNetworkImage.evictFromCache(friend.avatar!); // 清除图片缓存
+    /*
+    final avatarProvider = CachedNetworkImageProvider(
+      friend.avatar!,
+      headers: {
+        // 声明跨域请求模式（需与服务器 CORS 配置匹配）
+        "Access-Control-Allow-Origin": "*", // 为啥不管用（恼
+        "Origin": "anonymous", // 新加的，希望有用🙏
+      },
+      cacheKey: "circle_avatar",
+      maxWidth: 50,
+      maxHeight: 50,
+    );
+    avatarProvider.evict();
+    */
 
     return ListTile(
       leading: CircleAvatar(
-          radius: 25,
-          child: friend.avatar != null
-              ? ClipOval(
-                  child: CachedNetworkImage(
-                  imageUrl: friend.avatar!,
-                  httpHeaders: {"Access-Control-Allow-Origin": "*"},
-                  placeholder: (context, url) =>
-                      CircularProgressIndicator(), // 加载时的占位符
-                  errorWidget: (context, url, error) =>
-                      Icon(Icons.error), // 加载失败时的占位符
-                  fit: BoxFit.cover,
-                  width: 50,
-                  height: 50,
-                ))
-              : Icon(Icons.error)),
+        radius: 25,
+        child: (friend.avatar != null && friend.avatar! != "")
+            ? ClipOval(
+                child: Image.network(
+                // 返璞归真
+                friend.avatar!,
+                headers: {
+                  // 声明跨域请求模式（需与服务器 CORS 配置匹配）
+                  "Access-Control-Allow-Origin": "*",
+                  // "Origin": "https://", // 没用
+                },
+                width: 50,
+                height: 50,
+                loadingBuilder: (context, child, progress) {
+                  return progress == null
+                      ? child
+                      : Center(child: CircularProgressIndicator());
+                },
+                errorBuilder: (context, error, stackTrace) {
+                  return Icon(Icons.error, size: 20);
+                },
+              ))
+            : Container(
+                width: 50,
+                height: 50,
+                alignment: Alignment.center,
+                child: Icon(Icons.warning, size: 20),
+              ),
+      ),
       title: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [

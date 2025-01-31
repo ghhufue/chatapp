@@ -40,7 +40,8 @@ dependencies:
   web_socket_channel: ^3.0.1
   sqflite_common_ffi: ^2.3.4+4
   intl: ^0.20.1
-  cached_network_image: ^3.2.3
+  crypto: ^3.0.6
+  # cached_network_image: ^3.2.3
 
 dev_dependencies:
   flutter_test:
