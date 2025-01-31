@@ -119,7 +119,7 @@ class _ChatPageState extends State<ChatPage> {
             ),
           ),
 
-          // 输入框和发送按钮
+          // 输入框、图片按钮和发送按钮
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Row(
@@ -136,10 +136,34 @@ class _ChatPageState extends State<ChatPage> {
                   ),
                 ),
                 SizedBox(width: 8),
-                ElevatedButton(
-                  onPressed: () => _sendMessage(_controller.text),
-                  child: Icon(Icons.send),
-                ),
+                SizedBox(
+                    width: 50,
+                    height: 50,
+                    child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          minimumSize: Size.zero,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        onPressed: () => (),
+                        child: Center(child: Icon(Icons.image)))), // TODO
+                SizedBox(width: 8),
+                SizedBox(
+                    width: 50,
+                    height: 50,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        minimumSize: Size.zero,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: () => _sendMessage(_controller.text),
+                      child: Center(child: Icon(Icons.send)),
+                    )),
               ],
             ),
           ),
