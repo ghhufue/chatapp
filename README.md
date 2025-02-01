@@ -55,6 +55,8 @@ lib/
 - **好友聊天功能：**
   - [x] 好友列表的加载与显示
   - [x] 消息的及时转发及存储
+  - [x] 图片显示与传输功能 🖼️ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; **负责人**: 🧑‍💻 jcl
+
 - **机器人聊天功能：**
   - [x] 机器人的实时聊天功能
 
@@ -63,7 +65,6 @@ lib/
 ### 🚀 正在进行中
 
 - **功能开发：**
-  - [ ] 图片显示与传输功能 🖼️ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; **负责人**: 🧑‍💻 jcl
   - [ ] 好友添加的程序及界面 🤝 &nbsp;&nbsp;&nbsp;&nbsp; **负责人**: 🧑‍💻 zhz
 
 ---
@@ -106,7 +107,7 @@ class ChatService {
     onNewMessage = func;
   }
   static void connect() {} // 初始化连接，用于与服务器websocket建立连接，并注册
-  static void sendMessage(String? message, int? receiverId) {} // 发送消息，同时传入用户token用作验证
+  static void sendMessage(String? message, String? messageType, int? receiverId) {} // 发送消息，同时传入用户token用作验证
   static void readMessage(int? senderId) {} // 告知服务器已阅读过某人的消息，更新消息状态
   void sendFriendRequest(String friendId) {} // 发送朋友申请
   static void sortMessages(List<Message> messages) {} // 按时间顺序排列消息

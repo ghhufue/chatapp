@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:html';
 import 'package:file_picker/file_picker.dart';
 import 'package:logger/logger.dart';
-import 'package:http/http.dart' as http;
-import 'package:mime_type/mime_type.dart' as mime;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../user/user.dart';
 import '../services/chat_service.dart';
 import '../globals.dart';
@@ -22,6 +21,7 @@ class _ChatImagePageState extends State<ChatImagePage> {
   PlatformFile? _selectedFile;
   final logger = Logger();
   var fileEmpty = true;
+  var isUploading = false;
   List<Message> messages = [];
   String? suffix = "";
 
@@ -48,11 +48,15 @@ class _ChatImagePageState extends State<ChatImagePage> {
     }
   }
 
-  void _sendImage() {
+  Future<void> _sendImage() async {
     if (fileEmpty) {
       logger.e('Cannot upload nothing.');
       return;
     }
+
+    setState(() {
+      isUploading = true;
+    });
 
     final timestamp = DateTime.now().toUtc().toIso8601String();
     final imageUrl = Uri.parse(
@@ -61,11 +65,14 @@ class _ChatImagePageState extends State<ChatImagePage> {
 
     logger.i('Uploading file to $imageUrl');
 
+    final env = DotEnv();
+    await env.load(fileName: '../bos_keys.env');
+
     try {
       // 发送图片
-      BOSUploader.upload(
-          accessKey: '5d6fc519e7fa4b9b8d8b590070228e62',
-          secretKey: '3908166070914370b15a412792143903',
+      await BOSUploader.upload(
+          accessKey: env.get('CLOUD_API_KEY'),
+          secretKey: env.get('SECRET_KEY'),
           bucketName: 'aichatapp-image',
           region: 'su',
           objectKey:
@@ -73,23 +80,21 @@ class _ChatImagePageState extends State<ChatImagePage> {
           fileBytes: _selectedFile!.bytes!);
 
       // 插入一条图片消息
-      setState(() {
-        final messageId = messages.length + 1;
-        final newMessage = Message(
-            messageId: messageId,
-            senderId: CurrentUser.instance.userId,
-            receiverId: widget.friend.friendId,
-            content: imageUrl.toString(),
-            messageType: "image",
-            timestamp: timestamp.toString());
-        messages.add(newMessage);
-        if (widget.friend.isbot == 0) {
-          ChatService.sendMessage(
-              imageUrl.toString(), "image", widget.friend.friendId);
-        } else if (comment.isEmpty) {
-          ChatService.sendMessageToBot(messages, widget.friend.friendId);
-        }
-      });
+      final messageId = messages.length + 1;
+      final newMessage = Message(
+          messageId: messageId,
+          senderId: CurrentUser.instance.userId,
+          receiverId: widget.friend.friendId,
+          content: imageUrl.toString(),
+          messageType: "image",
+          timestamp: timestamp.toString());
+      messages.add(newMessage);
+      if (widget.friend.isbot == 0) {
+        ChatService.sendMessage(
+            imageUrl.toString(), "image", widget.friend.friendId);
+      } else if (comment.isEmpty) {
+        ChatService.sendMessageToBot(messages, widget.friend.friendId);
+      }
 
       // 插入comment（如果有）
       if (comment.isNotEmpty) {
@@ -111,67 +116,81 @@ class _ChatImagePageState extends State<ChatImagePage> {
     } catch (e) {
       logger.e('Upload failed: ${e.toString()}');
     }
+
     Navigator.pop(context); // 返回聊天界面
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Send image to: ${widget.friend.nickname}'),
-      ),
-      body: Column(children: [
-        Expanded(
-            child: Center(
-                child: _selectedFile != null
-                    ? Image.memory(
-                        _selectedFile!.bytes!,
-                        width: 500,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Icon(Icons.broken_image, size: 50);
-                        },
-                      )
-                    : Icon(Icons.image, size: 50))),
-        SizedBox(height: 10),
-        Center(
-            child: ElevatedButton(
-          onPressed: () => _selectFile(),
-          child: Text('Select Image'),
-        )),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
-            children: [
+      appBar: isUploading
+          ? null
+          : AppBar(
+              title: Text('Send image to: ${widget.friend.nickname}'),
+            ),
+      body: isUploading
+          ? Center(
+              child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(),
+                    SizedBox(height: 8),
+                    Text('Please wait while image is uploading...'),
+                  ]),
+            )
+          : Column(children: [
               Expanded(
-                child: TextField(
-                  controller: _controller,
-                  decoration: InputDecoration(
-                    hintText: 'Add a comment...',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
-              ),
-              SizedBox(width: 8),
-              SizedBox(
-                  width: 50,
-                  height: 50,
+                  child: Center(
+                      child: _selectedFile != null
+                          ? Image.memory(
+                              _selectedFile!.bytes!,
+                              width: 500,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Icon(Icons.broken_image, size: 50);
+                              },
+                            )
+                          : Icon(Icons.image, size: 50))),
+              SizedBox(height: 10),
+              Center(
                   child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      padding: EdgeInsets.zero,
-                      minimumSize: Size.zero,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                onPressed: () => _selectFile(),
+                child: Text('Select Image'),
+              )),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _controller,
+                        decoration: InputDecoration(
+                          hintText: 'Add a comment...',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
                       ),
                     ),
-                    onPressed: () => {_sendImage()},
-                    child: Center(child: Icon(Icons.send)),
-                  )),
-            ],
-          ),
-        ),
-      ]),
+                    SizedBox(width: 8),
+                    SizedBox(
+                        width: 50,
+                        height: 50,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            padding: EdgeInsets.zero,
+                            minimumSize: Size.zero,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          onPressed: () => {_sendImage()},
+                          child: Center(child: Icon(Icons.send)),
+                        )),
+                  ],
+                ),
+              ),
+            ]),
     );
   }
 }
