@@ -22,7 +22,7 @@ class _ChatPageState extends State<ChatPage> {
   void initState() {
     super.initState();
     _loadMessages();
-    ChatService.setCallback(_receiveMessage);
+    ChatService.addCallback('newMessage', _receiveMessage);
   }
 
   // load messages
