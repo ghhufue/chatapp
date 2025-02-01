@@ -44,6 +44,7 @@ dependencies:
   url_launcher:
   file_picker:
   mime_type: ^1.0.0
+  flutter_dotenv:
   # cached_network_image: ^3.2.3
 
 dev_dependencies:

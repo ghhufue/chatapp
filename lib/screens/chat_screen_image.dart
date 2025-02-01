@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:html';
 import 'package:file_picker/file_picker.dart';
 import 'package:logger/logger.dart';
-import 'package:http/http.dart' as http;
-import 'package:mime_type/mime_type.dart' as mime;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../user/user.dart';
 import '../services/chat_service.dart';
 import '../globals.dart';
@@ -66,11 +65,14 @@ class _ChatImagePageState extends State<ChatImagePage> {
 
     logger.i('Uploading file to $imageUrl');
 
+    final env = DotEnv();
+    await env.load(fileName: '../bos_keys.env');
+
     try {
       // 发送图片
       await BOSUploader.upload(
-          accessKey: '5d6fc519e7fa4b9b8d8b590070228e62',
-          secretKey: '3908166070914370b15a412792143903',
+          accessKey: env.get('CLOUD_API_KEY'),
+          secretKey: env.get('SECRET_KEY'),
           bucketName: 'aichatapp-image',
           region: 'su',
           objectKey:
