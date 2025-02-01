@@ -4,28 +4,65 @@ import 'package:http/browser_client.dart';
 import 'package:crypto/crypto.dart';
 import 'package:mime_type/mime_type.dart' as mime;
 
-class BOSUploader {
-  static final BrowserClient _client = BrowserClient();
+class BOSHelper {
+  static final bucketName = "aichatapp-image";
+  static final region = "su";
+  static final expires = 3600;
 
-  /// 上传文件到百度云BOS
-  ///
-  /// [accessKey] 百度云访问密钥
-  /// [secretKey] 百度云安全密钥
-  /// [bucketName] 存储桶名称
-  /// [region] 存储桶区域代码（如 "bj"）
-  /// [objectKey] 目标文件路径（如 "uploads/image.jpg"）
-  /// [fileBytes] 文件二进制数据
-  /// [contentType] 文件MIME类型（可选，默认根据扩展名自动判断）
-  ///
-  /// 返回：成功时返回true，失败时抛出异常
   static Future<void> upload({
     required String accessKey,
     required String secretKey,
-    required String bucketName,
-    required String region,
     required String objectKey,
     required Uint8List fileBytes,
   }) async {
+    final BrowserClient client = BrowserClient();
+
+    // 发送请求
+    final uri = url(objectKey: objectKey);
+    final response = await client.put(uri,
+        headers: generateHeaderWithAuthorization(
+            accessKey: accessKey,
+            secretKey: secretKey,
+            objectKey: objectKey,
+            method: 'PUT'),
+        body: fileBytes);
+
+    client.close();
+    if (response.statusCode != 200) {
+      throw "Upload '$objectKey' failed (${response.statusCode}): ${response.body}";
+    }
+  }
+
+  static Future<Uint8List> download({
+    required String accessKey,
+    required String secretKey,
+    required String objectKey,
+  }) async {
+    final BrowserClient client = BrowserClient();
+
+    // 发送请求
+    final uri = url(objectKey: objectKey);
+    final response = await client.put(uri,
+        headers: generateHeaderWithAuthorization(
+            accessKey: accessKey,
+            secretKey: secretKey,
+            objectKey: objectKey,
+            method: 'GET'),
+        body: '');
+
+    client.close();
+    if (response.statusCode != 200) {
+      throw "Download '$objectKey' failed (${response.statusCode}): ${response.body}";
+    }
+    return response.bodyBytes;
+  }
+
+  static Map<String, String>? generateHeaderWithAuthorization({
+    required String accessKey,
+    required String secretKey,
+    required String objectKey,
+    required String method,
+  }) {
     final contentType = mime.mime(objectKey)!;
     final timestamp = _generateTimestamp();
     final encodedObjectKey =
@@ -41,22 +78,42 @@ class BOSUploader {
     // 生成签名
     final signature = _generateSignature(
         signingKey: Hmac(sha256, utf8.encode(secretKey))
-            .convert(utf8.encode('bce-auth-v1/$accessKey/$timestamp/3600'))
+            .convert(utf8.encode('bce-auth-v1/$accessKey/$timestamp/$expires'))
             .toString(),
-        method: 'PUT',
+        method: method,
         resource: '/$encodedObjectKey',
         headers: headers);
 
     headers['Authorization'] =
-        'bce-auth-v1/$accessKey/$timestamp/3600/content-type;host;x-bce-date/$signature';
+        'bce-auth-v1/$accessKey/$timestamp/$expires/content-type;host;x-bce-date/$signature';
 
-    // 发送请求
-    final url =
-        Uri.parse('https://$bucketName.$region.bcebos.com/$encodedObjectKey');
-    final response = await _client.put(url, headers: headers, body: fileBytes);
-    if (response.statusCode != 200) {
-      throw "Upload failed (${response.statusCode}): ${response.body}";
-    }
+    return headers;
+  }
+
+  static Uri url({required String objectKey}) => Uri.parse(
+      'https://$bucketName.$region.bcebos.com/${Uri.encodeComponent(objectKey).replaceAll('%2F', '/')}');
+
+  static Uri generateVisitableUrl(
+      {required String accessKey,
+      required String secretKey,
+      required String objectKey}) {
+    final timestamp = _generateTimestamp();
+    final encodedObjectKey =
+        Uri.encodeComponent(objectKey).replaceAll('%2F', '/');
+
+    final signature = _generateSignature(
+        signingKey: Hmac(sha256, utf8.encode(secretKey))
+            .convert(utf8.encode('bce-auth-v1/$accessKey/$timestamp/$expires'))
+            .toString(),
+        method: 'GET',
+        resource: '/$encodedObjectKey',
+        headers: {
+          'Host': '$bucketName.$region.bcebos.com',
+          'x-bce-date': timestamp,
+        });
+
+    return Uri.parse(
+        'https://$bucketName.$region.bcebos.com/$objectKey?authorization=bce-auth-v1/$accessKey/$timestamp/$expires/host;x-bce-date/$signature');
   }
 
   static String _generateTimestamp() {
@@ -68,24 +125,6 @@ class BOSUploader {
         '${now.minute.toString().padLeft(2, '0')}:'
         '${now.second.toString().padLeft(2, '0')}Z';
   }
-
-  /*
-  // 获取MIME类型
-  static String _getMimeType(String path) {
-    final ext = path.split('.').last.toLowerCase();
-    return const {
-          'jpg': 'image/jpeg',
-          'jpeg': 'image/jpeg',
-          'png': 'image/png',
-          'webp': 'image/webp',
-          'bmp': 'image/bmp',
-          'svg': 'image/svg',
-          'tiff': 'image/tiff',
-          'gif': 'image/gif',
-        }[ext] ??
-        'application/octet-stream';
-  }
-  */
 
   // 生成签名
   static String _generateSignature(

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:chatapp/user/user.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../services/chat_service.dart';
+import '../services/image_service.dart';
 import 'package:chatapp/globals.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -141,20 +143,33 @@ class _ChatPageState extends State<ChatPage> {
                                           CrossAxisAlignment.start,
                                       children: [
                                         InkWell(
-                                          onTap: () =>
-                                              _launchURL(message.content!),
+                                          onTap: () => _launchURL(
+                                              BOSHelper.generateVisitableUrl(
+                                                  accessKey: dotenv
+                                                      .env['CLOUD_API_KEY']!,
+                                                  secretKey:
+                                                      dotenv.env['SECRET_KEY']!,
+                                                  objectKey: message.content!)),
                                           borderRadius:
                                               BorderRadius.circular(12),
                                           child: ClipRRect(
                                             borderRadius:
                                                 BorderRadius.circular(12),
                                             child: Image.network(
-                                              message.content!,
-                                              headers: {
-                                                // 声明跨域请求模式（需与服务器 CORS 配置匹配）
-                                                "Access-Control-Allow-Origin":
-                                                    "*",
-                                              },
+                                              BOSHelper.url(
+                                                      objectKey:
+                                                          message.content!)
+                                                  .toString(),
+                                              headers: BOSHelper
+                                                  .generateHeaderWithAuthorization(
+                                                      accessKey: dotenv.env[
+                                                          'CLOUD_API_KEY']!,
+                                                      secretKey: dotenv
+                                                          .env['SECRET_KEY']!,
+                                                      objectKey:
+                                                          message.content!,
+                                                      method: 'GET'),
+                                              // ["Access-Control-Allow-Origin"] = "*",
                                               width: 200,
                                               loadingBuilder:
                                                   (context, child, progress) {
@@ -303,11 +318,10 @@ class _ChatPageState extends State<ChatPage> {
     }
   }
 
-  Future<void> _launchURL(String url) async {
-    final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
+  Future<void> _launchURL(Uri url) async {
+    if (await canLaunchUrl(url)) {
       await launchUrl(
-        uri,
+        url,
         webOnlyWindowName: '_blank', // Web 专用：在新标签页打开
       );
     }

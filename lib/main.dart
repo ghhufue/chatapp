@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
 import 'screens/chathomepage.dart';
@@ -14,6 +15,7 @@ void main() async {
   //   sqfliteFfiInit();
   //   databaseFactory = databaseFactoryFfi;
   // }
+  await dotenv.load(fileName: '../bos_keys.env'); // 从文件中加载百度云BOS密钥
 
   runApp(const MyApp());
 }

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:html';
 import 'package:file_picker/file_picker.dart';
 import 'package:logger/logger.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -59,24 +58,18 @@ class _ChatImagePageState extends State<ChatImagePage> {
     });
 
     final timestamp = DateTime.now().toUtc().toIso8601String();
-    final imageUrl = Uri.parse(
-        'https://aichatapp-image.su.bcebos.com/chat/${CurrentUser.instance.userId}s${widget.friend.friendId}r$timestamp.$suffix');
+    final objectKey =
+        'chat/${CurrentUser.instance.userId}s${widget.friend.friendId}r$timestamp.$suffix';
     final comment = _controller.text;
 
-    logger.i('Uploading file to $imageUrl');
-
-    final env = DotEnv();
-    await env.load(fileName: '../bos_keys.env');
+    logger.i('Uploading file to aichatapp-image.su.bcebos.com/$objectKey');
 
     try {
       // 发送图片
-      await BOSUploader.upload(
-          accessKey: env.get('CLOUD_API_KEY'),
-          secretKey: env.get('SECRET_KEY'),
-          bucketName: 'aichatapp-image',
-          region: 'su',
-          objectKey:
-              'chat/${CurrentUser.instance.userId}s${widget.friend.friendId}r$timestamp.$suffix',
+      await BOSHelper.upload(
+          accessKey: dotenv.env['CLOUD_API_KEY']!,
+          secretKey: dotenv.env['SECRET_KEY']!,
+          objectKey: objectKey,
           fileBytes: _selectedFile!.bytes!);
 
       // 插入一条图片消息
@@ -85,13 +78,12 @@ class _ChatImagePageState extends State<ChatImagePage> {
           messageId: messageId,
           senderId: CurrentUser.instance.userId,
           receiverId: widget.friend.friendId,
-          content: imageUrl.toString(),
+          content: objectKey,
           messageType: "image",
           timestamp: timestamp.toString());
       messages.add(newMessage);
       if (widget.friend.isbot == 0) {
-        ChatService.sendMessage(
-            imageUrl.toString(), "image", widget.friend.friendId);
+        ChatService.sendMessage(objectKey, "image", widget.friend.friendId);
       } else if (comment.isEmpty) {
         ChatService.sendMessageToBot(messages, widget.friend.friendId);
       }

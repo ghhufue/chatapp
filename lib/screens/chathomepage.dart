@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../user/user.dart';
 import 'package:logger/logger.dart';
 import 'package:chatapp/globals.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../services/image_service.dart';
 import 'package:intl/intl.dart';
 import 'chat_screen.dart';
 // import 'package:cached_network_image/cached_network_image.dart';
@@ -82,7 +84,6 @@ class _FriendListPageState extends State<FriendListPage> {
 
 class FriendTile extends StatelessWidget {
   final Friend friend;
-
   const FriendTile({super.key, required this.friend});
 
   @override
@@ -107,11 +108,13 @@ class FriendTile extends StatelessWidget {
             ? ClipOval(
                 child: Image.network(
                 // 返璞归真
-                friend.avatar!,
-                headers: {
-                  // 声明跨域请求模式（需与服务器 CORS 配置匹配）
-                  "Access-Control-Allow-Origin": "*",
-                },
+                BOSHelper.url(objectKey: friend.avatar!).toString(),
+                headers: BOSHelper.generateHeaderWithAuthorization(
+                    accessKey: dotenv.env['CLOUD_API_KEY']!,
+                    secretKey: dotenv.env['SECRET_KEY']!,
+                    objectKey: friend.avatar!,
+                    method: 'GET'),
+                // "Access-Control-Allow-Origin": "*",
                 width: 50,
                 height: 50,
                 loadingBuilder: (context, child, progress) {
