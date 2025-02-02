@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'dart:typed_data';
 import '../user/user.dart';
-import 'package:logger/logger.dart';
+import 'package:chatapp/services/chat_service.dart';
 import 'package:chatapp/globals.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../services/image_service.dart';
@@ -127,26 +128,22 @@ class FriendTile extends StatelessWidget {
         radius: 25,
         child: (friend.avatar != null && friend.avatar! != "")
             ? ClipOval(
-                child: Image.network(
-                // 返璞归真
-                BOSHelper.url(objectKey: friend.avatar!).toString(),
-                headers: BOSHelper.generateHeaderWithAuthorization(
-                    accessKey: dotenv.env['CLOUD_API_KEY']!,
-                    secretKey: dotenv.env['SECRET_KEY']!,
-                    objectKey: friend.avatar!,
-                    method: 'GET'),
-                // "Access-Control-Allow-Origin": "*",
-                width: 50,
-                height: 50,
-                loadingBuilder: (context, child, progress) {
-                  return progress == null
-                      ? child
-                      : Center(child: CircularProgressIndicator());
-                },
-                errorBuilder: (context, error, stackTrace) {
-                  return Icon(Icons.error, size: 20);
-                },
-              ))
+                child: FutureBuilder<Uint8List>(
+                  future: ChatService.downloadImage(objectKey: friend.avatar!),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return CircularProgressIndicator();
+                    } else if (snapshot.hasError) {
+                      return Icon(Icons.error);
+                    }
+                    final Uint8List imageBytes = snapshot.data!;
+                    return Image.memory(imageBytes, width: 50,
+                        errorBuilder: (context, error, stackTrace) {
+                      return Icon(Icons.error);
+                    });
+                  },
+                ),
+              )
             : Container(
                 width: 50,
                 height: 50,

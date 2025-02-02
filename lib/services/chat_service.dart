@@ -1,6 +1,8 @@
+import 'dart:typed_data';
 import 'package:chatapp/user/user.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:http/http.dart' as http;
+import 'package:mime_type/mime_type.dart' as mime;
 import 'package:chatapp/globals.dart';
 import 'friend_service.dart';
 import 'dart:convert';
@@ -173,5 +175,57 @@ class ChatService {
         content: response["response"],
         messageType: "text",
         timestamp: response["timestamp"]);
+  }
+
+  static Future<void> uploadImage(
+      {required String objectKey, required Uint8List fileBytes}) async {
+    final response = await http.post(
+      Uri.parse('$serverUrl/api/putImage'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Object-Key': objectKey,
+      },
+      body: json.encode(<String, String>{
+        'content': String.fromCharCodes(fileBytes.toList(growable: false))
+      }),
+      // encoding: Encoding.getByName('utf-8')
+    );
+
+    if (response.statusCode != 200) {
+      logger.e(response.body);
+      throw Exception('Failed to upload image');
+    }
+  }
+
+  static Future<Uint8List> downloadImage({required String objectKey}) async {
+    final response = await http.post(
+      Uri.parse('$serverUrl/api/fetchImage'),
+      headers: {
+        'Object-Key': objectKey,
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return response.bodyBytes;
+    } else {
+      logger.e(response.body);
+      throw Exception('Failed to fetch image');
+    }
+  }
+
+  static Future<String> getUrl({required String objectKey}) async {
+    final response = await http.post(
+      Uri.parse('$serverUrl/api/fetchUrl'),
+      headers: {
+        'Object-Key': objectKey,
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return response.body;
+    } else {
+      logger.e(response.body);
+      throw Exception('Failed to fetch url');
+    }
   }
 }

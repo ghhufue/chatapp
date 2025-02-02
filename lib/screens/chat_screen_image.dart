@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../user/user.dart';
 import '../services/chat_service.dart';
 import '../globals.dart';
-import '../services/image_service.dart';
 
 class ChatImagePage extends StatefulWidget {
   final Friend friend;
@@ -60,15 +58,13 @@ class _ChatImagePageState extends State<ChatImagePage> {
         'chat/${CurrentUser.instance.userId}s${widget.friend.friendId}r$timestamp.$suffix';
     final comment = _controller.text;
 
-    logger.i('Uploading file to aichatapp-image.su.bcebos.com/$objectKey');
+    logger.i('Uploading file to $objectKey');
 
     try {
       // 发送图片
-      await BOSHelper.upload(
-          accessKey: dotenv.env['CLOUD_API_KEY']!,
-          secretKey: dotenv.env['SECRET_KEY']!,
-          objectKey: objectKey,
-          fileBytes: _selectedFile!.bytes!);
+      await ChatService.uploadImage(
+          objectKey: objectKey, fileBytes: _selectedFile!.bytes!);
+
       // 插入一条图片消息
       final messageId = messages.length + 1;
       final newMessage = Message(

@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:http/browser_client.dart';
-import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:http/http.dart' as http;
 import 'package:crypto/crypto.dart';
 import 'package:mime_type/mime_type.dart' as mime;
@@ -11,8 +10,6 @@ class BOSHelper {
   static final bucketName = "aichatapp-image";
   static final region = "su";
   static final expires = 3600;
-
-  static late WebSocketChannel _channel;
 
   static Future<void> upload({
     required String accessKey,
@@ -35,40 +32,6 @@ class BOSHelper {
     client.close();
     if (response.statusCode != 200) {
       throw "Upload '$objectKey' failed (${response.statusCode}): ${response.body}";
-    }
-  }
-
-  static Future<void> uploadImage(
-      {required String objectKey, required Uint8List fileBytes}) async {
-    final response = await http.post(
-      Uri.parse('$serverUrl/api/putImage'),
-      headers: {
-        'Content-Type': mime.mime(objectKey).toString(),
-        'Object-Key': objectKey,
-      },
-      body: fileBytes,
-    );
-
-    if (response.statusCode != 200) {
-      logger.e(response.body);
-      throw Exception('Failed to upload image');
-    }
-  }
-
-  static Future<Uint8List> downloadImage({required String objectKey}) async {
-    final response = await http.post(
-      Uri.parse('$serverUrl/api/fetchImage'),
-      headers: {
-        'Object-Key': objectKey,
-      },
-      body: null,
-    );
-
-    if (response.statusCode == 200) {
-      return response.bodyBytes;
-    } else {
-      logger.e(response.body);
-      throw Exception('Failed to fetch image');
     }
   }
 
