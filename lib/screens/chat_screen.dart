@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:chatapp/user/user.dart';
 import '../services/chat_service.dart';
@@ -140,40 +141,64 @@ class _ChatPageState extends State<ChatPage> {
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
-                                        InkWell(
-                                          onTap: () =>
-                                              _launchURL(message.content!),
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                          child: ClipRRect(
-                                            borderRadius:
-                                                BorderRadius.circular(12),
-                                            child: Image.network(
-                                              message.content!,
-                                              headers: {
-                                                // 声明跨域请求模式（需与服务器 CORS 配置匹配）
-                                                "Access-Control-Allow-Origin":
-                                                    "*",
-                                              },
-                                              width: 200,
-                                              loadingBuilder:
-                                                  (context, child, progress) {
-                                                return progress == null
-                                                    ? child
-                                                    : Center(
-                                                        child:
-                                                            CircularProgressIndicator());
-                                              },
-                                              errorBuilder:
-                                                  (context, error, stackTrace) {
-                                                logger.e(
-                                                    'Failed to get image on ${message.content}');
+                                        FutureBuilder<String>(
+                                            future: ChatService.getUrl(
+                                                objectKey: message.content!),
+                                            builder: ((context, snapshot) {
+                                              if (snapshot.connectionState ==
+                                                  ConnectionState.waiting) {
+                                                return CircularProgressIndicator();
+                                              } else if (snapshot.hasError) {
                                                 return Icon(Icons.broken_image,
                                                     size: 50);
-                                              },
-                                            ),
-                                          ),
-                                        ),
+                                              }
+                                              return InkWell(
+                                                onTap: () =>
+                                                    _launchURL(snapshot.data!),
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                                child: ClipRRect(
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
+                                                  child:
+                                                      FutureBuilder<Uint8List>(
+                                                    future: ChatService
+                                                        .downloadImage(
+                                                            objectKey: message
+                                                                .content!),
+                                                    builder:
+                                                        (context, snapshot) {
+                                                      if (snapshot
+                                                              .connectionState ==
+                                                          ConnectionState
+                                                              .waiting) {
+                                                        return CircularProgressIndicator();
+                                                      } else if (snapshot
+                                                          .hasError) {
+                                                        return Icon(
+                                                            Icons.broken_image,
+                                                            size: 50);
+                                                      }
+                                                      final Uint8List
+                                                          imageBytes =
+                                                          snapshot.data!;
+                                                      return Image.memory(
+                                                          imageBytes,
+                                                          width: 300,
+                                                          errorBuilder:
+                                                              (context, error,
+                                                                  stackTrace) {
+                                                        logger.e(
+                                                            error.toString());
+                                                        return Icon(
+                                                            Icons.broken_image,
+                                                            size: 50);
+                                                      });
+                                                    },
+                                                  ),
+                                                ),
+                                              );
+                                            })),
                                         SizedBox(height: 4),
                                         Text(
                                           _formatTimestamp(message.timestamp),
@@ -304,6 +329,7 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Future<void> _launchURL(String url) async {
+    logger.i('Opening: $url');
     final uri = Uri.parse(url);
     if (await canLaunchUrl(uri)) {
       await launchUrl(

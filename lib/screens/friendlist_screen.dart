@@ -1,7 +1,9 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import '../user/user.dart';
 import '../globals.dart';
 import './chathomepage.dart';
+import '../services/chat_service.dart';
 
 class FriendListScreen extends StatefulWidget {
   @override
@@ -54,7 +56,32 @@ class _FriendListScreenState extends State<FriendListScreen> {
                 final friend = filteredFriends[index];
                 return ListTile(
                   leading: CircleAvatar(
-                    backgroundImage: NetworkImage(friend.avatar ?? ''),
+                    child: (friend.avatar != null && friend.avatar! != "")
+                        ? ClipOval(
+                            child: FutureBuilder<Uint8List>(
+                              future: ChatService.downloadImage(
+                                  objectKey: friend.avatar!),
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState ==
+                                    ConnectionState.waiting) {
+                                  return CircularProgressIndicator();
+                                } else if (snapshot.hasError) {
+                                  return Icon(Icons.error);
+                                }
+                                final Uint8List imageBytes = snapshot.data!;
+                                return Image.memory(imageBytes, width: 50,
+                                    errorBuilder: (context, error, stackTrace) {
+                                  return Icon(Icons.error);
+                                });
+                              },
+                            ),
+                          )
+                        : Container(
+                            width: 50,
+                            height: 50,
+                            alignment: Alignment.center,
+                            child: Icon(Icons.warning, size: 20),
+                          ),
                   ),
                   title: Text(friend.nickname ?? ''),
                   onTap: () {

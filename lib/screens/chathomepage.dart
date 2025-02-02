@@ -1,18 +1,11 @@
 import 'package:flutter/material.dart';
+import 'dart:typed_data';
 import '../user/user.dart';
+import 'package:chatapp/services/chat_service.dart';
 import 'package:chatapp/globals.dart';
 import 'package:intl/intl.dart';
 import 'chat_screen.dart';
 import 'friendlist_screen.dart';
-// import 'package:cached_network_image/cached_network_image.dart';
-
-/*
-String _getImageUrl(String? avatarUrl) {
-  // 添加时间戳参数，避免缓存问题
-  final timestamp = DateTime.now().millisecondsSinceEpoch;
-  return '$avatarUrl?t=$timestamp';
-}
-*/
 
 class ChatHomePage extends StatefulWidget {
   const ChatHomePage({super.key});
@@ -102,7 +95,6 @@ class _ChatHomePageState extends State<ChatHomePage> {
 
 class FriendTile extends StatelessWidget {
   final Friend friend;
-
   const FriendTile({super.key, required this.friend});
 
   @override
@@ -125,24 +117,22 @@ class FriendTile extends StatelessWidget {
         radius: 25,
         child: (friend.avatar != null && friend.avatar! != "")
             ? ClipOval(
-                child: Image.network(
-                // 返璞归真
-                friend.avatar!,
-                headers: {
-                  // 声明跨域请求模式（需与服务器 CORS 配置匹配）
-                  "Access-Control-Allow-Origin": "*",
-                },
-                width: 50,
-                height: 50,
-                loadingBuilder: (context, child, progress) {
-                  return progress == null
-                      ? child
-                      : Center(child: CircularProgressIndicator());
-                },
-                errorBuilder: (context, error, stackTrace) {
-                  return Icon(Icons.error, size: 20);
-                },
-              ))
+                child: FutureBuilder<Uint8List>(
+                  future: ChatService.downloadImage(objectKey: friend.avatar!),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return CircularProgressIndicator();
+                    } else if (snapshot.hasError) {
+                      return Icon(Icons.error);
+                    }
+                    final Uint8List imageBytes = snapshot.data!;
+                    return Image.memory(imageBytes, width: 50,
+                        errorBuilder: (context, error, stackTrace) {
+                      return Icon(Icons.error);
+                    });
+                  },
+                ),
+              )
             : Container(
                 width: 50,
                 height: 50,

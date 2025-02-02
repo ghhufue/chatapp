@@ -12,10 +12,11 @@ lib/
 │   ├── chat_screen_image.dart # 上传图片界面
 │   ├── login_screen.dart      # 登录界面
 │   ├── register_screen.dart   # 注册界面
+│   ├── friendlist_screen.dart # 好友管理界面
 ├── services/             # 服务层（处理逻辑）
 │   ├── auth_service.dart      # 认证服务（登录、注册）
-│   ├── chat_service.dart      # 聊天服务（聊天相关功能）
-│   ├── image_service.dart     # 图片服务（图片上传相关功能）
+│   ├── chat_service.dart      # 聊天服务（聊天相关功能，包括文字信息和图片的接收与传输）
+│   ├── friend_service.dart    # 好友相关服务
 │   ├── localsqlite.dart       # 本地数据库服务，使用 SQLite 存储数据（暂未实现）
 └── user/                 # 用户相关数据
     └── user.dart               # 用户模型
@@ -115,6 +116,10 @@ class ChatService {
   // 发送给机器人消息，同时附上历史聊天记录，回复消息现在会通过websocket直接传回
   static void handleMessage(String message) {} // 实时接收到消息时调用回调函数，更新消息列表（这里逻辑有点复杂）
   static Message getMessage(Map<String, dynamic> response) {} // 将response解包为Message类型
+  static Future<void> uploadImage(
+      String objectKey, Uint8List fileBytes) async {} // 向node server发送图片在存储桶中的名称objectKey和图片数据fileBytes
+  static Future<Uint8List> downloadImage(String objectKey) async {} // 向node server请求存储桶中名称为objectKey的图片数据
+  static Future<String> getUrl(String objectKey) async {} // 向node server请求存储桶中名称为objectKey的图片的可直接访问链接
 }
 
 ```
