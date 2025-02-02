@@ -2,7 +2,7 @@ import 'package:chatapp/user/user.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:http/http.dart' as http;
 import 'package:chatapp/globals.dart';
-import 'friend_service.dart';
+import './friend_service.dart';
 import 'dart:convert';
 
 enum DatabaseType {
@@ -156,12 +156,14 @@ class ChatService {
 
   static void handleResponse(String serverResponse) {
     final Map<String, dynamic> response = jsonDecode(serverResponse);
+    logger.i(response);
     final String type = response["type"];
     if (type == ResponseType.newMessage.string) {
       Message receivedMessage = getMessage(response);
       _invokeCallbacks(receivedMessage, type);
     } else if (type == ResponseType.newFriendRequest.string) {
-      //FriendService.showFriendRequest()
+      FriendRequest request = FriendRequest.fromMap(response);
+      FriendService.instance.showFriendRequest(request);
     }
   }
 

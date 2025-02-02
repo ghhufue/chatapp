@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../user/user.dart';
-import 'package:logger/logger.dart';
 import 'package:chatapp/globals.dart';
 import 'package:intl/intl.dart';
 import 'chat_screen.dart';
