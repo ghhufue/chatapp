@@ -3,20 +3,9 @@ import 'dart:typed_data';
 import '../user/user.dart';
 import 'package:chatapp/services/chat_service.dart';
 import 'package:chatapp/globals.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import '../services/image_service.dart';
 import 'package:intl/intl.dart';
 import 'chat_screen.dart';
 import 'friendlist_screen.dart';
-// import 'package:cached_network_image/cached_network_image.dart';
-
-/*
-String _getImageUrl(String? avatarUrl) {
-  // 添加时间戳参数，避免缓存问题
-  final timestamp = DateTime.now().millisecondsSinceEpoch;
-  return '$avatarUrl?t=$timestamp';
-}
-*/
 
 class ChatHomePage extends StatefulWidget {
   const ChatHomePage({super.key});

@@ -1,9 +1,7 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:chatapp/user/user.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../services/chat_service.dart';
-import '../services/image_service.dart';
 import 'package:chatapp/globals.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';

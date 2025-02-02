@@ -2,7 +2,6 @@ import 'dart:typed_data';
 import 'package:chatapp/user/user.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:http/http.dart' as http;
-import 'package:mime_type/mime_type.dart' as mime;
 import 'package:chatapp/globals.dart';
 import './friend_service.dart';
 import 'dart:convert';
