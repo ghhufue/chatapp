@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../services/chat_service.dart';
@@ -127,5 +129,25 @@ class Message {
       "messageType": messageType,
       "timestamp": timestamp,
     };
+  }
+}
+
+class ChatImage {
+  String? key;
+  String? mime;
+  Uint8List? data;
+
+  ChatImage({
+    required this.key,
+    required this.mime,
+    required this.data,
+  });
+
+  factory ChatImage.fromJson(Map<String, dynamic> json) {
+    return ChatImage(key: json['key'], mime: json['mime'], data: json['data']);
+  }
+
+  Map<String, dynamic> toJson() {
+    return {'key': key, 'mime': mime, 'data': data};
   }
 }
