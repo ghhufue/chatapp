@@ -115,6 +115,10 @@ class ChatService {
   // 发送给机器人消息，同时附上历史聊天记录，回复消息现在会通过websocket直接传回
   static void handleMessage(String message) {} // 实时接收到消息时调用回调函数，更新消息列表（这里逻辑有点复杂）
   static Message getMessage(Map<String, dynamic> response) {} // 将response解包为Message类型
+  static Future<void> uploadImage(
+      String objectKey, Uint8List fileBytes) async {} // 向node server发送图片在存储桶中的名称objectKey和图片数据fileBytes
+  static Future<Uint8List> downloadImage(String objectKey) async {} // 向node server请求存储桶中名称为objectKey的图片数据
+  static Future<String> getUrl(String objectKey) async {} // 向node server请求存储桶中名称为objectKey的图片的可直接访问链接
 }
 
 ```

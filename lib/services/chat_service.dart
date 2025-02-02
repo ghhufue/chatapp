@@ -178,6 +178,7 @@ class ChatService {
         timestamp: response["timestamp"]);
   }
 
+  // 向node server发送图片
   static Future<void> uploadImage(
       {required String objectKey, required Uint8List fileBytes}) async {
     final response = await http.post(
@@ -198,6 +199,7 @@ class ChatService {
     }
   }
 
+  // 从node server接收图片
   static Future<Uint8List> downloadImage({required String objectKey}) async {
     final response = await http.post(
       Uri.parse('$serverUrl/api/fetchImage'),
@@ -214,6 +216,7 @@ class ChatService {
     }
   }
 
+  // 从node server获取能直接访问图片的url
   static Future<String> getUrl({required String objectKey}) async {
     final response = await http.post(
       Uri.parse('$serverUrl/api/fetchUrl'),
