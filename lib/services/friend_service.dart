@@ -97,6 +97,14 @@ class FriendRequest {
     this.description,
     required this.avatar,
   });
+  factory FriendRequest.fromMap(Map<String, dynamic> response) {
+    return FriendRequest(
+      friendId: response['friendId'] as int?,
+      description: response['description'] as String?,
+      nickname: response['nickname'] as String?,
+      avatar: response['avatar'] as String?,
+    );
+  }
 }
 
 class FriendRequestDialog extends StatelessWidget {
