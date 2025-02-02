@@ -12,10 +12,11 @@ lib/
 │   ├── chat_screen_image.dart # 上传图片界面
 │   ├── login_screen.dart      # 登录界面
 │   ├── register_screen.dart   # 注册界面
+│   ├── friendlist_screen.dart # 好友管理界面
 ├── services/             # 服务层（处理逻辑）
 │   ├── auth_service.dart      # 认证服务（登录、注册）
-│   ├── chat_service.dart      # 聊天服务（聊天相关功能）
-│   ├── image_service.dart     # 图片服务（图片上传相关功能）
+│   ├── chat_service.dart      # 聊天服务（聊天相关功能，包括文字信息和图片的接收与传输）
+│   ├── friend_service.dart    # 好友相关服务
 │   ├── localsqlite.dart       # 本地数据库服务，使用 SQLite 存储数据（暂未实现）
 └── user/                 # 用户相关数据
     └── user.dart               # 用户模型
