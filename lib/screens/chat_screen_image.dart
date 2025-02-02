@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:logger/logger.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../user/user.dart';
 import '../services/chat_service.dart';
@@ -18,7 +17,6 @@ class ChatImagePage extends StatefulWidget {
 class _ChatImagePageState extends State<ChatImagePage> {
   final TextEditingController _controller = TextEditingController();
   PlatformFile? _selectedFile;
-  final logger = Logger();
   var fileEmpty = true;
   var isUploading = false;
   List<Message> messages = [];
@@ -71,7 +69,6 @@ class _ChatImagePageState extends State<ChatImagePage> {
           secretKey: dotenv.env['SECRET_KEY']!,
           objectKey: objectKey,
           fileBytes: _selectedFile!.bytes!);
-
       // 插入一条图片消息
       final messageId = messages.length + 1;
       final newMessage = Message(

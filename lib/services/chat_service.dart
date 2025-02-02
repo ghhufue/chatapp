@@ -2,6 +2,7 @@ import 'package:chatapp/user/user.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:http/http.dart' as http;
 import 'package:chatapp/globals.dart';
+import 'friend_service.dart';
 import 'dart:convert';
 
 enum DatabaseType {
@@ -9,11 +10,39 @@ enum DatabaseType {
   local,
 }
 
+enum ResponseType {
+  newMessage('newMessage'),
+  newFriendRequest('newFriendRequest');
+
+  final String string;
+  const ResponseType(this.string);
+}
+
 class ChatService {
   static late WebSocketChannel _channel;
-  static Function(Message)? onNewMessage;
-  static void setCallback(Function(Message) func) {
-    onNewMessage = func;
+  static final Map<String, Function(dynamic)> _callbacks = {};
+
+  static void addCallback<T>(String callbackId, void Function(T) func) {
+    _callbacks[callbackId] = (dynamic args) {
+      if (args is T) {
+        func(args);
+      } else {
+        logger.e('Callback for $callbackId received an invalid type.');
+      }
+    };
+  }
+
+  static void removeCallback(String callbackId) {
+    _callbacks.remove(callbackId);
+  }
+
+  static void _invokeCallbacks(dynamic args, String? callbackId) {
+    final callback = _callbacks[callbackId];
+    if (callback != null) {
+      callback(args);
+    } else {
+      logger.w('Callback with id $callbackId not found.');
+    }
   }
 
   static void connect() {
@@ -28,9 +57,9 @@ class ChatService {
     }
 
     _channel.stream.listen(
-      (message) {
-        logger.i('Received from server: $message');
-        handleMessage(message);
+      (response) {
+        logger.i('Received from server: $response');
+        handleResponse(response);
       },
       onDone: () {
         logger.w('WebSocket connection closed.');
@@ -125,10 +154,14 @@ class ChatService {
     }
   }
 
-  static void handleMessage(String message) {
-    Message receivedMessage = getMessage(jsonDecode(message));
-    if (onNewMessage != null) {
-      onNewMessage!(receivedMessage);
+  static void handleResponse(String serverResponse) {
+    final Map<String, dynamic> response = jsonDecode(serverResponse);
+    final String type = response["type"];
+    if (type == ResponseType.newMessage.string) {
+      Message receivedMessage = getMessage(response);
+      _invokeCallbacks(receivedMessage, type);
+    } else if (type == ResponseType.newFriendRequest.string) {
+      //FriendService.showFriendRequest()
     }
   }
 

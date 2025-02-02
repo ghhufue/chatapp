@@ -6,9 +6,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../services/image_service.dart';
 import 'package:intl/intl.dart';
 import 'chat_screen.dart';
+import 'friendlist_screen.dart';
 // import 'package:cached_network_image/cached_network_image.dart';
-
-var logger = Logger();
 
 /*
 String _getImageUrl(String? avatarUrl) {
@@ -18,14 +17,14 @@ String _getImageUrl(String? avatarUrl) {
 }
 */
 
-class FriendListPage extends StatefulWidget {
-  const FriendListPage({super.key});
+class ChatHomePage extends StatefulWidget {
+  const ChatHomePage({super.key});
 
   @override
-  _FriendListPageState createState() => _FriendListPageState();
+  _ChatHomePageState createState() => _ChatHomePageState();
 }
 
-class _FriendListPageState extends State<FriendListPage> {
+class _ChatHomePageState extends State<ChatHomePage> {
   bool _isLoading = false; // 加载状态
   List<Friend> _friendList = []; // 用于存储好友列表
 
@@ -78,6 +77,28 @@ class _FriendListPageState extends State<FriendListPage> {
                     return FriendTile(friend: friend); // 自定义好友组件
                   },
                 ),
+      bottomNavigationBar: BottomAppBar(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            IconButton(
+              icon: Icon(Icons.chat),
+              onPressed: () {
+                logger.t("You are already in the chat screen.");
+              },
+            ),
+            IconButton(
+              icon: Icon(Icons.people),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => FriendListScreen()),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -4,6 +4,7 @@ import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
 import 'screens/chathomepage.dart';
 import 'services/auth_service.dart';
+import 'globals.dart';
 
 //import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 //import 'dart:io';
@@ -26,13 +27,14 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey,
       title: 'Login & Register',
       theme: ThemeData(primarySwatch: Colors.blue),
       initialRoute: '/login',
       routes: {
         '/login': (context) => const LoginScreen(),
         '/register': (context) => const RegisterScreen(),
-        '/chat': (context) => FriendListPage(),
+        '/chat': (context) => ChatHomePage(),
       },
     );
   }
