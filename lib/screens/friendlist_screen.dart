@@ -4,6 +4,7 @@ import '../user/user.dart';
 import '../globals.dart';
 import './chathomepage.dart';
 import '../services/chat_service.dart';
+import 'chat_screen.dart';
 
 class FriendListScreen extends StatefulWidget {
   @override
@@ -87,6 +88,11 @@ class _FriendListScreenState extends State<FriendListScreen> {
                   onTap: () {
                     // 点击好友项时触发的操作，例如查看好友详情
                     logger.i("Tapped on ${friend.nickname}");
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ChatPage(friend: friend),
+                        )); // 传递好友对象
                   },
                 );
               },
