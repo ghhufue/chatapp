@@ -204,19 +204,6 @@ class ChatService {
   // 上传图片
   static Future<void> uploadImage(
       {required String objectKey, required Uint8List fileBytes}) async {
-    /*
-    final response = await http.post(
-      Uri.parse('$serverUrl/api/putImage'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Object-Key': objectKey,
-      },
-      body: json.encode(<String, String>{
-        'content': fileString
-      }),
-      // encoding: Encoding.getByName('utf-8')
-    );*/
-
     final response = await http.put(
         Uri.parse(await getUrl(objectKey: objectKey, method: 'PUT')),
         body: fileBytes.toList(
@@ -235,13 +222,6 @@ class ChatService {
 
   // 下载图片
   static Future<Uint8List> downloadImage({required String objectKey}) async {
-    /*final response = await http.post(
-      Uri.parse('$serverUrl/api/fetchImage'),
-      headers: {
-        'Object-Key': objectKey,
-      },
-    );*/
-
     final response = await http.get(
       Uri.parse(await getUrl(objectKey: objectKey, method: 'GET')),
     );
@@ -250,7 +230,7 @@ class ChatService {
       return response.bodyBytes;
     } else {
       logger.e(response.body);
-      throw Exception('Failed to fetch image');
+      throw Exception('Failed to download image');
     }
   }
 }
