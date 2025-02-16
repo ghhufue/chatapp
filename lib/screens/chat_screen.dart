@@ -143,7 +143,8 @@ class _ChatPageState extends State<ChatPage> {
                                       children: [
                                         FutureBuilder<String>(
                                             future: ChatService.getUrl(
-                                                objectKey: message.content!),
+                                                objectKey: message.content!,
+                                                method: 'GET'),
                                             builder: ((context, snapshot) {
                                               if (snapshot.connectionState ==
                                                   ConnectionState.waiting) {
