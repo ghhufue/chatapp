@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 import 'package:chatapp/user/user.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
+import 'package:mime_type/mime_type.dart';
 import 'package:http/http.dart' as http;
 import 'package:chatapp/globals.dart';
 import './friend_service.dart';
@@ -22,6 +23,7 @@ enum ResponseType {
 class ChatService {
   static late WebSocketChannel _channel;
   static final Map<String, Function(dynamic)> _callbacks = {};
+  static final bucketName = 'aichatapp-image.oss-cn-nanjing.aliyuncs.com';
 
   static void addCallback<T>(String callbackId, void Function(T) func) {
     _callbacks[callbackId] = (dynamic args) {
@@ -178,49 +180,15 @@ class ChatService {
         timestamp: response["timestamp"]);
   }
 
-  // 向node server发送图片
-  static Future<void> uploadImage(
-      {required String objectKey, required Uint8List fileBytes}) async {
-    final response = await http.post(
-      Uri.parse('$serverUrl/api/putImage'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Object-Key': objectKey,
-      },
-      body: json.encode(<String, String>{
-        'content': String.fromCharCodes(fileBytes.toList(growable: false))
-      }),
-      // encoding: Encoding.getByName('utf-8')
-    );
-
-    if (response.statusCode != 200) {
-      logger.e(response.body);
-      throw Exception('Failed to upload image');
-    }
-  }
-
-  // 从node server接收图片
-  static Future<Uint8List> downloadImage({required String objectKey}) async {
-    final response = await http.post(
-      Uri.parse('$serverUrl/api/fetchImage'),
-      headers: {
-        'Object-Key': objectKey,
-      },
-    );
-
-    if (response.statusCode == 200) {
-      return response.bodyBytes;
-    } else {
-      logger.e(response.body);
-      throw Exception('Failed to fetch image');
-    }
-  }
-
-  // 从node server获取能直接访问图片的url
-  static Future<String> getUrl({required String objectKey}) async {
+  // 从node server获取带authorization的url
+  static Future<String> getUrl(
+      {required String objectKey, required String method}) async {
     final response = await http.post(
       Uri.parse('$serverUrl/api/fetchUrl'),
       headers: {
+        'Content-Type':
+            '${mimeFromExtension(objectKey.split('.').last)}; charset=utf-8',
+        'Method': method,
         'Object-Key': objectKey,
       },
     );
@@ -230,6 +198,59 @@ class ChatService {
     } else {
       logger.e(response.body);
       throw Exception('Failed to fetch url');
+    }
+  }
+
+  // 上传图片
+  static Future<void> uploadImage(
+      {required String objectKey, required Uint8List fileBytes}) async {
+    /*
+    final response = await http.post(
+      Uri.parse('$serverUrl/api/putImage'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Object-Key': objectKey,
+      },
+      body: json.encode(<String, String>{
+        'content': fileString
+      }),
+      // encoding: Encoding.getByName('utf-8')
+    );*/
+
+    final response = await http.put(
+        Uri.parse(await getUrl(objectKey: objectKey, method: 'PUT')),
+        body: fileBytes.toList(
+            growable:
+                false), // String.fromCharCodes(fileBytes.toList(growable: false)),
+        headers: {
+          'content-type':
+              '${mimeFromExtension(objectKey.split('.').last)}; charset=utf-8',
+        });
+
+    if (response.statusCode != 200) {
+      logger.e(response.body);
+      throw Exception('Failed to upload image');
+    }
+  }
+
+  // 下载图片
+  static Future<Uint8List> downloadImage({required String objectKey}) async {
+    /*final response = await http.post(
+      Uri.parse('$serverUrl/api/fetchImage'),
+      headers: {
+        'Object-Key': objectKey,
+      },
+    );*/
+
+    final response = await http.get(
+      Uri.parse(await getUrl(objectKey: objectKey, method: 'GET')),
+    );
+
+    if (response.statusCode == 200) {
+      return response.bodyBytes;
+    } else {
+      logger.e(response.body);
+      throw Exception('Failed to fetch image');
     }
   }
 }
