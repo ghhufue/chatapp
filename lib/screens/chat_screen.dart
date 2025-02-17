@@ -1,11 +1,14 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:chatapp/user/user.dart';
 import '../services/chat_service.dart';
 import 'package:chatapp/globals.dart';
+import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'chat_screen_image.dart';
 
 class ChatPage extends StatefulWidget {
   final Friend friend;
-
   const ChatPage({super.key, required this.friend});
 
   @override
@@ -20,13 +23,14 @@ class _ChatPageState extends State<ChatPage> {
   void initState() {
     super.initState();
     _loadMessages();
+    ChatService.addCallback('newMessage', _receiveMessage);
   }
 
   // load messages
   void _loadMessages() {
     setState(() {
       _messages = widget.friend.historyMessage;
-      _messages.sort((a, b) => a.timestamp!.compareTo(b.timestamp!)); // 按时间升序排列
+      _messages.sort((a, b) => b.messageId!.compareTo(a.messageId!));
     });
   }
 
@@ -34,9 +38,7 @@ class _ChatPageState extends State<ChatPage> {
   void _sendMessage(String content) {
     if (content.isEmpty) return;
     setState(() {
-      ChatService.sendMessage(content, widget.friend.friendId);
       final messageId = _messages.length + 1;
-
       final newMessage = Message(
           messageId: messageId,
           senderId: CurrentUser.instance.userId,
@@ -46,12 +48,26 @@ class _ChatPageState extends State<ChatPage> {
           timestamp: DateTime.now().toIso8601String());
       _messages.add(newMessage);
       _controller.clear();
+      if (widget.friend.isbot == 0) {
+        ChatService.sendMessage(content, "text", widget.friend.friendId);
+      } else {
+        ChatService.sendMessageToBot(_messages, widget.friend.friendId);
+      }
     });
     // 发送消息后自动滚动到底部
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
         _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
       }
+    });
+  }
+
+  void _receiveMessage(Message newMessage) {
+    setState(() {
+      newMessage.messageId = _messages.length + 1;
+      _messages.add(newMessage);
+      _messages
+          .sort((a, b) => b.messageId!.compareTo(a.messageId!)); // 保证按时间顺序排列
     });
   }
 
@@ -80,34 +96,168 @@ class _ChatPageState extends State<ChatPage> {
                 return Align(
                   alignment:
                       isSentByMe ? Alignment.centerRight : Alignment.centerLeft,
-                  child: Container(
-                    padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                    margin: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-                    decoration: BoxDecoration(
-                      color: isSentByMe ? Colors.blue[200] : Colors.grey[300],
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          message.content ?? '',
-                          style: TextStyle(fontSize: 16),
-                        ),
-                        SizedBox(height: 4),
-                        Text(
-                          _formatTimestamp(message.timestamp),
-                          style: TextStyle(fontSize: 12, color: Colors.grey),
-                        ),
-                      ],
-                    ),
-                  ),
+                  child: message.messageType == "text" // 信息类型是文本
+                      ? Container(
+                          padding:
+                              EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                          margin:
+                              EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                          decoration: BoxDecoration(
+                            color: isSentByMe
+                                ? Colors.blue[200]
+                                : Colors.grey[300],
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                message.content ?? '',
+                                style: TextStyle(fontSize: 16),
+                              ),
+                              SizedBox(height: 4),
+                              Text(
+                                _formatTimestamp(message.timestamp),
+                                style:
+                                    TextStyle(fontSize: 12, color: Colors.grey),
+                              ),
+                            ],
+                          ),
+                        )
+                      : message.messageType == "image" // 信息类型是图片
+                          ? message.content != null
+                              ? Container(
+                                  padding: EdgeInsets.symmetric(
+                                      vertical: 8, horizontal: 12),
+                                  margin: EdgeInsets.symmetric(
+                                      vertical: 4, horizontal: 8),
+                                  decoration: BoxDecoration(
+                                    color: isSentByMe
+                                        ? Colors.blue[200]
+                                        : Colors.grey[300],
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        FutureBuilder<String>(
+                                            future: ChatService.getUrl(
+                                                objectKey: message.content!,
+                                                method: 'GET'),
+                                            builder: ((context, snapshot) {
+                                              if (snapshot.connectionState ==
+                                                  ConnectionState.waiting) {
+                                                return CircularProgressIndicator();
+                                              } else if (snapshot.hasError) {
+                                                return Icon(Icons.broken_image,
+                                                    size: 50);
+                                              }
+                                              return InkWell(
+                                                onTap: () =>
+                                                    _launchURL(snapshot.data!),
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                                child: ClipRRect(
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
+                                                  child:
+                                                      FutureBuilder<Uint8List>(
+                                                    future: ChatService
+                                                        .downloadImage(
+                                                            objectKey: message
+                                                                .content!),
+                                                    builder:
+                                                        (context, snapshot) {
+                                                      if (snapshot
+                                                              .connectionState ==
+                                                          ConnectionState
+                                                              .waiting) {
+                                                        return CircularProgressIndicator();
+                                                      } else if (snapshot
+                                                          .hasError) {
+                                                        return Icon(
+                                                            Icons.broken_image,
+                                                            size: 50);
+                                                      }
+                                                      final Uint8List
+                                                          imageBytes =
+                                                          snapshot.data!;
+                                                      return Image.memory(
+                                                          imageBytes,
+                                                          width: 300,
+                                                          errorBuilder:
+                                                              (context, error,
+                                                                  stackTrace) {
+                                                        logger.e(
+                                                            error.toString());
+                                                        return Icon(
+                                                            Icons.broken_image,
+                                                            size: 50);
+                                                      });
+                                                    },
+                                                  ),
+                                                ),
+                                              );
+                                            })),
+                                        SizedBox(height: 4),
+                                        Text(
+                                          _formatTimestamp(message.timestamp),
+                                          style: TextStyle(
+                                              fontSize: 12, color: Colors.grey),
+                                        ),
+                                      ]))
+                              : Container(
+                                  padding: EdgeInsets.symmetric(
+                                      vertical: 8, horizontal: 12),
+                                  margin: EdgeInsets.symmetric(
+                                      vertical: 4, horizontal: 8),
+                                  decoration: BoxDecoration(
+                                    color: isSentByMe
+                                        ? Colors.blue[200]
+                                        : Colors.grey[300],
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Icon(Icons.broken_image, size: 50),
+                                        SizedBox(height: 4),
+                                        Text(
+                                          _formatTimestamp(message.timestamp),
+                                          style: TextStyle(
+                                              fontSize: 12, color: Colors.grey),
+                                        ),
+                                      ]))
+                          : Container(
+                              padding: EdgeInsets.symmetric(
+                                  vertical: 8, horizontal: 12),
+                              margin: EdgeInsets.symmetric(
+                                  vertical: 4, horizontal: 8),
+                              decoration: BoxDecoration(
+                                color: isSentByMe
+                                    ? Colors.blue[200]
+                                    : Colors.grey[300],
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Icon(Icons.error, size: 50),
+                                    SizedBox(height: 4),
+                                    Text(
+                                      _formatTimestamp(message.timestamp),
+                                      style: TextStyle(
+                                          fontSize: 12, color: Colors.grey),
+                                    ),
+                                  ])),
                 );
               },
             ),
           ),
 
-          // 输入框和发送按钮
+          // 输入框、图片按钮和发送按钮
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Row(
@@ -124,10 +274,38 @@ class _ChatPageState extends State<ChatPage> {
                   ),
                 ),
                 SizedBox(width: 8),
-                ElevatedButton(
-                  onPressed: () => _sendMessage(_controller.text),
-                  child: Icon(Icons.send),
-                ),
+                SizedBox(
+                    width: 50,
+                    height: 50,
+                    child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          minimumSize: Size.zero,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        onPressed: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) =>
+                                    ChatImagePage(friend: widget.friend))),
+                        child: Center(child: Icon(Icons.image)))),
+                SizedBox(width: 8),
+                SizedBox(
+                    width: 50,
+                    height: 50,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        minimumSize: Size.zero,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: () => _sendMessage(_controller.text),
+                      child: Center(child: Icon(Icons.send)),
+                    )),
               ],
             ),
           ),
@@ -138,9 +316,27 @@ class _ChatPageState extends State<ChatPage> {
 
   // 格式化时间
   String _formatTimestamp(String? timestamp) {
-    if (timestamp == null) return '';
-    final DateTime date = DateTime.parse(timestamp);
-    final TimeOfDay time = TimeOfDay.fromDateTime(date);
-    return '${date.month}-${date.day} ${time.format(context)}';
+    // logger.i('Timestamp: $timestamp');
+    try {
+      if (timestamp == null) throw 'No time';
+      // 解析原始格式的字符串
+      final DateTime date =
+          DateTime.parse(timestamp).toLocal(); // 原来这里有问题，改了下，现在显示的时间就对了
+      // 转换为目标格式
+      return DateFormat('MM-dd HH:mm').format(date);
+    } catch (e) {
+      return e.toString(); // 异常处理
+    }
+  }
+
+  Future<void> _launchURL(String url) async {
+    logger.i('Opening: $url');
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(
+        uri,
+        webOnlyWindowName: '_blank', // Web 专用：在新标签页打开
+      );
+    }
   }
 }

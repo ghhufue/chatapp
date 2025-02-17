@@ -40,6 +40,11 @@ dependencies:
   web_socket_channel: ^3.0.1
   sqflite_common_ffi: ^2.3.4+4
   intl: ^0.20.1
+  crypto: ^3.0.6
+  url_launcher:
+  file_picker:
+  mime_type: ^1.0.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

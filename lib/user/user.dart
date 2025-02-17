@@ -69,12 +69,14 @@ class Friend {
   int? friendId;
   String? nickname;
   String? avatar;
+  int? isbot;
   List<Message> historyMessage;
 
   Friend({
     required this.friendId,
     required this.nickname,
     required this.avatar,
+    required this.isbot,
     this.historyMessage = const [], // 默认值为空列表
   });
 
@@ -83,6 +85,7 @@ class Friend {
       friendId: json['friend_id'] as int?,
       nickname: json['nickname'] as String?,
       avatar: json['avatar'] as String?,
+      isbot: json['isbot'] as int?,
       historyMessage: (json['historyMessage'] as List<dynamic>?)
               ?.map((messageJson) => Message.fromJson(messageJson))
               .toList() ??
@@ -108,11 +111,21 @@ class Message {
   });
   factory Message.fromJson(Map<String, dynamic> json) {
     return Message(
-        messageId: json["id"],
+        messageId: json["message_id"],
         senderId: json["sender_id"],
         receiverId: json["receiver_id"],
         content: json["content"],
-        messageType: json["messageType"],
+        messageType: json["message_type"],
         timestamp: json["timestamp"]);
+  }
+  Map<String, dynamic> toJson() {
+    return {
+      "id": messageId,
+      "sender_id": senderId,
+      "receiver_id": receiverId,
+      "content": content,
+      "messageType": messageType,
+      "timestamp": timestamp,
+    };
   }
 }

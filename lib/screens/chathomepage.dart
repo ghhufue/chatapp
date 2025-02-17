@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
+import 'dart:typed_data';
 import '../user/user.dart';
-import 'package:logger/logger.dart';
+import 'package:chatapp/services/chat_service.dart';
 import 'package:chatapp/globals.dart';
 import 'package:intl/intl.dart';
 import 'chat_screen.dart';
+import 'friendlist_screen.dart';
 
-var logger = Logger();
-
-class FriendListPage extends StatefulWidget {
-  const FriendListPage({super.key});
+class ChatHomePage extends StatefulWidget {
+  const ChatHomePage({super.key});
 
   @override
-  _FriendListPageState createState() => _FriendListPageState();
+  _ChatHomePageState createState() => _ChatHomePageState();
 }
 
-class _FriendListPageState extends State<FriendListPage> {
+class _ChatHomePageState extends State<ChatHomePage> {
   bool _isLoading = false; // 加载状态
   List<Friend> _friendList = []; // 用于存储好友列表
 
@@ -67,13 +67,34 @@ class _FriendListPageState extends State<FriendListPage> {
                     return FriendTile(friend: friend); // 自定义好友组件
                   },
                 ),
+      bottomNavigationBar: BottomAppBar(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            IconButton(
+              icon: Icon(Icons.chat),
+              onPressed: () {
+                logger.t("You are already in the chat screen.");
+              },
+            ),
+            IconButton(
+              icon: Icon(Icons.people),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => FriendListScreen()),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
 
 class FriendTile extends StatelessWidget {
   final Friend friend;
-
   const FriendTile({super.key, required this.friend});
 
   @override
@@ -86,16 +107,38 @@ class FriendTile extends StatelessWidget {
     // 格式化时间，仅显示 "MM-dd HH:mm" 的格式
     String? formattedTime;
     if (lastMessage != null && lastMessage.timestamp != null) {
-      final DateTime messageTime = DateTime.parse(lastMessage.timestamp!);
+      final DateTime messageTime =
+          DateTime.parse(lastMessage.timestamp!).toLocal();
       formattedTime = DateFormat('MM-dd HH:mm').format(messageTime);
     }
 
     return ListTile(
       leading: CircleAvatar(
         radius: 25,
-        backgroundImage: friend.avatar != null
-            ? NetworkImage(friend.avatar!)
-            : AssetImage('assets/default_avatar.png') as ImageProvider,
+        child: (friend.avatar != null && friend.avatar! != "")
+            ? ClipOval(
+                child: FutureBuilder<Uint8List>(
+                  future: ChatService.downloadImage(objectKey: friend.avatar!),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return CircularProgressIndicator();
+                    } else if (snapshot.hasError) {
+                      return Icon(Icons.error);
+                    }
+                    final Uint8List imageBytes = snapshot.data!;
+                    return Image.memory(imageBytes, width: 50,
+                        errorBuilder: (context, error, stackTrace) {
+                      return Icon(Icons.error);
+                    });
+                  },
+                ),
+              )
+            : Container(
+                width: 50,
+                height: 50,
+                alignment: Alignment.center,
+                child: Icon(Icons.warning, size: 20),
+              ),
       ),
       title: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -117,11 +160,15 @@ class FriendTile extends StatelessWidget {
         ],
       ),
       subtitle: lastMessage != null
-          ? Text(
-              lastMessage.content ?? '',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            )
+          ? lastMessage.messageType == "text"
+              ? Text(
+                  lastMessage.content ?? '',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                )
+              : lastMessage.messageType == "image"
+                  ? Text('[Image]') // 如果是图片就显示图片
+                  : Text('[Unsupported Message]') // 如果是其他的，那就是暂不支持
           : Text('No messages yet'), // 如果没有消息
       onTap: () {
         // 点击好友项时的操作，比如进入聊天详情页

@@ -11,7 +11,7 @@ class AuthService {
       baseUrl = 'http://localhost:3000/api';
       logger.i("Run on Web");
     } else if (Platform.isAndroid) {
-      baseUrl = 'http://10.0.2.2:3000/api';
+      baseUrl = 'http://chatappdb.yht20050302.top:80/api';
       logger.t("Run on Android");
     }
   }
