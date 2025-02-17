@@ -137,7 +137,7 @@ class FriendTile extends StatelessWidget {
                 width: 50,
                 height: 50,
                 alignment: Alignment.center,
-                child: Icon(Icons.warning, size: 20),
+                child: Icon(Icons.person, size: 20),
               ),
       ),
       title: Row(
