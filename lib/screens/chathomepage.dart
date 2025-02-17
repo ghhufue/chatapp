@@ -6,6 +6,7 @@ import 'package:chatapp/globals.dart';
 import 'package:intl/intl.dart';
 import 'chat_screen.dart';
 import 'friendlist_screen.dart';
+import 'profile_screen.dart';
 
 class ChatHomePage extends StatefulWidget {
   const ChatHomePage({super.key});
