@@ -89,7 +89,11 @@ class _FriendListScreenState extends State<FriendListScreen> {
                             child: Icon(Icons.person, size: 20),
                           ),
                   ),
-                  title: Text(friend.nickname ?? ''),
+                  title: Text(
+                    friend.friendId == CurrentUser.instance.userId
+                        ? "${friend.nickname!} (me)"
+                        : friend.nickname!,
+                  ),
                   onTap: () {
                     // 点击好友项时触发的操作，例如查看好友详情
                     logger.i("Tapped on ${friend.nickname}");

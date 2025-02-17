@@ -72,7 +72,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   SizedBox(height: 10),
                   Center(
                       child: Text(
-                    widget.friend.nickname ?? "Unknown",
+                    widget.friend.friendId == CurrentUser.instance.userId
+                        ? "${widget.friend.nickname!} (me)"
+                        : widget.friend.nickname!,
                     style: TextStyle(fontSize: 50),
                   )),
                   SizedBox(height: 10),
@@ -90,28 +92,103 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Expanded(
                   child: SizedBox(
                     height: 60,
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                padding: EdgeInsets.zero,
-                                minimumSize: Size.zero,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
+                    child: CurrentUser.instance.userId ==
+                            widget.friend.friendId // 是否是自己
+                        ? Row(
+                            children: [
+                              Expanded(
+                                child: ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      padding: EdgeInsets.zero,
+                                      minimumSize: Size.zero,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                    onPressed: () => () // TODO: 编辑个人资料界面
+                                    /*Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                                builder: (context) => ChatPage(
+                                                    friend: widget.friend)))*/
+                                    ,
+                                    child: Center(
+                                        child: Text('Edit profile',
+                                            style: TextStyle(fontSize: 20)))),
                               ),
-                              onPressed: () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) =>
-                                          ChatPage(friend: widget.friend))),
-                              child: Center(
-                                  child: Text('Go to chat',
-                                      style: TextStyle(fontSize: 20)))),
-                        )
-                      ],
-                    ),
+                              SizedBox(width: 10),
+                              Expanded(
+                                child: ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      padding: EdgeInsets.zero,
+                                      minimumSize: Size.zero,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                    onPressed: () => Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) => ChatPage(
+                                                friend: widget.friend))),
+                                    child: Center(
+                                        child: Text('Go to chat',
+                                            style: TextStyle(fontSize: 20)))),
+                              )
+                            ],
+                          )
+                        : CurrentUser.instance.friendList
+                                .contains(widget.friend) // 是否是好友
+                            ? Row(
+                                children: [
+                                  Expanded(
+                                    child: ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                          padding: EdgeInsets.zero,
+                                          minimumSize: Size.zero,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                          ),
+                                        ),
+                                        onPressed: () => Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                                builder: (context) => ChatPage(
+                                                    friend: widget.friend))),
+                                        child: Center(
+                                            child: Text('Go to chat',
+                                                style:
+                                                    TextStyle(fontSize: 20)))),
+                                  )
+                                ],
+                              )
+                            : Row(
+                                children: [
+                                  Expanded(
+                                    child: ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                          padding: EdgeInsets.zero,
+                                          minimumSize: Size.zero,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                          ),
+                                        ),
+                                        onPressed: () => () // TODO: 加好友界面
+                                        /*Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                                builder: (context) => ChatPage(
+                                                    friend: widget.friend)))*/
+                                        ,
+                                        child: Center(
+                                            child: Text('Add friend',
+                                                style:
+                                                    TextStyle(fontSize: 20)))),
+                                  )
+                                ],
+                              ),
                   ),
                 )
               ],

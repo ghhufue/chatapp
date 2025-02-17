@@ -149,7 +149,9 @@ class FriendTile extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            friend.nickname ?? 'Unknown',
+            friend.friendId == CurrentUser.instance.userId
+                ? "${friend.nickname!} (me)"
+                : friend.nickname!,
             style: TextStyle(
               fontWeight: FontWeight.bold,
             ),

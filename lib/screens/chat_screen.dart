@@ -77,7 +77,11 @@ class _ChatPageState extends State<ChatPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.friend.nickname ?? 'Chat'),
+        title: Text(
+          widget.friend.friendId == CurrentUser.instance.userId
+              ? "${widget.friend.nickname!} (me)"
+              : widget.friend.nickname!,
+        ),
       ),
       body: Column(
         children: [
