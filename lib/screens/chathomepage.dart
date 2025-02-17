@@ -121,7 +121,12 @@ class FriendTile extends StatelessWidget {
                   future: ChatService.downloadImage(objectKey: friend.avatar!),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
-                      return CircularProgressIndicator();
+                      return Container(
+                        width: 50,
+                        height: 50,
+                        alignment: Alignment.center,
+                        child: Icon(Icons.person, size: 20),
+                      );
                     } else if (snapshot.hasError) {
                       return Icon(Icons.error);
                     }

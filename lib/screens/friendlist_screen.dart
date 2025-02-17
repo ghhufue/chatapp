@@ -4,7 +4,6 @@ import '../user/user.dart';
 import '../globals.dart';
 import './chathomepage.dart';
 import '../services/chat_service.dart';
-import 'chat_screen.dart';
 import 'package:chatapp/screens/profile_screen.dart';
 
 class FriendListScreen extends StatefulWidget {
@@ -66,7 +65,12 @@ class _FriendListScreenState extends State<FriendListScreen> {
                               builder: (context, snapshot) {
                                 if (snapshot.connectionState ==
                                     ConnectionState.waiting) {
-                                  return CircularProgressIndicator();
+                                  return Container(
+                                    width: 50,
+                                    height: 50,
+                                    alignment: Alignment.center,
+                                    child: Icon(Icons.person, size: 20),
+                                  );
                                 } else if (snapshot.hasError) {
                                   return Icon(Icons.error);
                                 }
