@@ -28,6 +28,11 @@ class _LoginScreenState extends State<LoginScreen> {
       CurrentUser.instance.userId = result['user_id'];
       CurrentUser.instance.nickname = result['nickname'];
       ChatService.connect();
+      // try {
+      //   await ChatDatabase.getDatabase();
+      // } catch (e) {
+      //   logger.e(e);
+      // }
       Navigator.pushReplacementNamed(context, '/chat');
     } else {
       ScaffoldMessenger.of(context).showSnackBar(

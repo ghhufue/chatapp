@@ -1,6 +1,5 @@
 {
     "editor.defaultFormatter": "esbenp.prettier-vscode", // 设置 Prettier 为默认格式化工具
     "editor.formatOnSave": true, // 启用保存时自动格式化
-    "files.autoSave": "onFocusChange",
-    "cmake.ignoreCMakeListsMissing": true // 可选，切换窗口时保存
+    "files.autoSave": "onFocusChange" // 可选，切换窗口时保存
 }

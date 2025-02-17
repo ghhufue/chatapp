@@ -3,7 +3,6 @@
 *.log
 *.pyc
 *.swp
-*.env
 .DS_Store
 .atom/
 .build/
@@ -33,7 +32,7 @@ migrate_working_dir/
 .pub-cache/
 .pub/
 /build/
-*.env
+
 # Symbolication related
 app.*.symbols
 

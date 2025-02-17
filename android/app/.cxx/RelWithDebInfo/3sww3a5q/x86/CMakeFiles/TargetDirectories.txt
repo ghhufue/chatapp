@@ -1,2 +1,0 @@
-D:/vscode/flutter/chatapp/android/app/.cxx/RelWithDebInfo/3sww3a5q/x86/CMakeFiles/edit_cache.dir
-D:/vscode/flutter/chatapp/android/app/.cxx/RelWithDebInfo/3sww3a5q/x86/CMakeFiles/rebuild_cache.dir

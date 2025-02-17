@@ -44,8 +44,8 @@ CREATE TABLE friends (
   }
 
   // 插入聊天记录
-  static Future<void> saveMessage(String sender, String receiver,
-      String message, String message_type) async {
+  static Future<void> saveMessage(
+      String sender, String receiver, String message) async {
     final db = await getDatabase();
     await db.insert(
       'messages',
@@ -53,7 +53,6 @@ CREATE TABLE friends (
         'sender': sender,
         'receiver': receiver,
         'content': message,
-        'message_type': message_type,
         'timestamp': DateTime.now().toIso8601String(),
       },
       conflictAlgorithm: ConflictAlgorithm.replace,
