@@ -77,7 +77,11 @@ class _ChatPageState extends State<ChatPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.friend.nickname ?? 'Chat'),
+        title: Text(
+          widget.friend.friendId == CurrentUser.instance.userId
+              ? "${widget.friend.nickname!} (me)"
+              : widget.friend.nickname!,
+        ),
       ),
       body: Column(
         children: [
@@ -148,7 +152,9 @@ class _ChatPageState extends State<ChatPage> {
                                             builder: ((context, snapshot) {
                                               if (snapshot.connectionState ==
                                                   ConnectionState.waiting) {
-                                                return CircularProgressIndicator();
+                                                return Icon(Icons.image,
+                                                    size: 50,
+                                                    color: Colors.grey);
                                               } else if (snapshot.hasError) {
                                                 return Icon(Icons.broken_image,
                                                     size: 50);
@@ -173,7 +179,9 @@ class _ChatPageState extends State<ChatPage> {
                                                               .connectionState ==
                                                           ConnectionState
                                                               .waiting) {
-                                                        return CircularProgressIndicator();
+                                                        return Icon(Icons.image,
+                                                            size: 50,
+                                                            color: Colors.grey);
                                                       } else if (snapshot
                                                           .hasError) {
                                                         return Icon(

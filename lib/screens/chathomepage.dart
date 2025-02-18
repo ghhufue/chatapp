@@ -6,6 +6,7 @@ import 'package:chatapp/globals.dart';
 import 'package:intl/intl.dart';
 import 'chat_screen.dart';
 import 'friendlist_screen.dart';
+import 'profile_screen.dart';
 
 class ChatHomePage extends StatefulWidget {
   const ChatHomePage({super.key});
@@ -121,7 +122,12 @@ class FriendTile extends StatelessWidget {
                   future: ChatService.downloadImage(objectKey: friend.avatar!),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
-                      return CircularProgressIndicator();
+                      return Container(
+                        width: 50,
+                        height: 50,
+                        alignment: Alignment.center,
+                        child: Icon(Icons.person, size: 20),
+                      );
                     } else if (snapshot.hasError) {
                       return Icon(Icons.error);
                     }
@@ -137,14 +143,16 @@ class FriendTile extends StatelessWidget {
                 width: 50,
                 height: 50,
                 alignment: Alignment.center,
-                child: Icon(Icons.warning, size: 20),
+                child: Icon(Icons.person, size: 20),
               ),
       ),
       title: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            friend.nickname ?? 'Unknown',
+            friend.friendId == CurrentUser.instance.userId
+                ? "${friend.nickname!} (me)"
+                : friend.nickname!,
             style: TextStyle(
               fontWeight: FontWeight.bold,
             ),

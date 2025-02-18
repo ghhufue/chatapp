@@ -4,7 +4,7 @@ import '../user/user.dart';
 import '../globals.dart';
 import './chathomepage.dart';
 import '../services/chat_service.dart';
-import 'chat_screen.dart';
+import 'package:chatapp/screens/profile_screen.dart';
 
 class FriendListScreen extends StatefulWidget {
   @override
@@ -65,7 +65,12 @@ class _FriendListScreenState extends State<FriendListScreen> {
                               builder: (context, snapshot) {
                                 if (snapshot.connectionState ==
                                     ConnectionState.waiting) {
-                                  return CircularProgressIndicator();
+                                  return Container(
+                                    width: 50,
+                                    height: 50,
+                                    alignment: Alignment.center,
+                                    child: Icon(Icons.person, size: 20),
+                                  );
                                 } else if (snapshot.hasError) {
                                   return Icon(Icons.error);
                                 }
@@ -81,17 +86,21 @@ class _FriendListScreenState extends State<FriendListScreen> {
                             width: 50,
                             height: 50,
                             alignment: Alignment.center,
-                            child: Icon(Icons.warning, size: 20),
+                            child: Icon(Icons.person, size: 20),
                           ),
                   ),
-                  title: Text(friend.nickname ?? ''),
+                  title: Text(
+                    friend.friendId == CurrentUser.instance.userId
+                        ? "${friend.nickname!} (me)"
+                        : friend.nickname!,
+                  ),
                   onTap: () {
                     // 点击好友项时触发的操作，例如查看好友详情
                     logger.i("Tapped on ${friend.nickname}");
                     Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => ChatPage(friend: friend),
+                          builder: (context) => ProfileScreen(friend: friend),
                         )); // 传递好友对象
                   },
                 );
