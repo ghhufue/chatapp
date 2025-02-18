@@ -9,6 +9,8 @@ import 'globals.dart';
 //import 'dart:io';
 
 void main() async {
+  setServerUrl();
+  logger.i("Server URL: $serverUrl");
   WidgetsFlutterBinding.ensureInitialized();
   AuthService.init();
   // if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
