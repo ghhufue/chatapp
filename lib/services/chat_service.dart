@@ -84,11 +84,11 @@ class ChatService {
 
   static void readMessage(int? senderId) {
     final data =
-        '{"type": "readMessage","messageId":$senderId,"token":"${CurrentUser.instance.token}"}';
+        '{"type": "readMessage","senderId":$senderId,"token":"${CurrentUser.instance.token}"}';
     _channel.sink.add(data);
   }
 
-  void sendFriendRequest(String friendId) {
+  void sendFriendRequest(int? friendId) {
     final data = '{"type":"sendFriendRequest","receiverId":$friendId}';
     _channel.sink.add(data);
   }

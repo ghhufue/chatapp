@@ -75,6 +75,7 @@ class _ChatPageState extends State<ChatPage> {
 
   @override
   Widget build(BuildContext context) {
+    ChatService.readMessage(widget.friend.friendId);
     return Scaffold(
       appBar: AppBar(
         title: Text(
