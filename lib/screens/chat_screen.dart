@@ -75,7 +75,6 @@ class _ChatPageState extends State<ChatPage> {
 
   @override
   Widget build(BuildContext context) {
-    ChatService.readMessage(widget.friend.friendId);
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -295,7 +294,6 @@ class _ChatPageState extends State<ChatPage> {
                           ),
                         ),
                         onPressed: () async {
-                          // TODO: Fix this
                           await Navigator.push(
                               context,
                               MaterialPageRoute(

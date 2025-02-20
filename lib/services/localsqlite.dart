@@ -1,9 +1,8 @@
+import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:logger/logger.dart';
-
-var logger = Logger();
+import 'package:chatapp/user/user.dart';
+import 'package:chatapp/globals.dart';
 
 class ChatDatabase {
   static Database? _database;
@@ -12,15 +11,15 @@ class ChatDatabase {
       logger.i("Database has been created");
       return _database!;
     }
-    final dbPath = await getDatabasesPath();
-    final path = join(dbPath, 'chat_app.db');
-    logger.i(path);
-    // 打开或创建数据库
-    _database = await openDatabase(
-      path,
-      version: 1,
-      onCreate: (db, version) {
-        db.execute('''
+
+    // 获取数据库路径
+    var factory = databaseFactoryFfiWeb;
+    _database = await factory.openDatabase(
+      'aichatapp.db',
+      options: OpenDatabaseOptions(
+          version: 1,
+          onCreate: (db, version) {
+            db.execute('''
 CREATE TABLE messages (
     message_id INTEGER PRIMARY KEY AUTOINCREMENT, 
     sender_id INTEGER NOT NULL,                   
@@ -28,7 +27,7 @@ CREATE TABLE messages (
     is_sender BOOLEAN DEFAULT TRUE,                
     content TEXT NOT NULL,                     
     message_type TEXT DEFAULT 'text',
-    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+    timestamp DATETIME NOT NULL
 );
 CREATE TABLE friends (
     user_id INT NOT NULL, 
@@ -38,38 +37,41 @@ CREATE TABLE friends (
     PRIMARY KEY (user_id, friend_id)
 );
         ''');
-      },
+          }),
     );
 
     return _database!;
   }
 
   // 插入聊天记录
-  static Future<void> saveMessage(String sender, String receiver,
-      String message, String message_type) async {
+  static Future<void> saveMessages(List<Message> messages) async {
     final db = await getDatabase();
-    await db.insert(
-      'messages',
-      {
-        'sender': sender,
-        'receiver': receiver,
-        'content': message,
-        'message_type': message_type,
-        'timestamp': DateTime.now().toIso8601String(),
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    for (final message in messages) {
+      await db.insert(
+        'messages',
+        {
+          'sender_id': message.senderId,
+          'receiver_id': message.receiverId,
+          'content': message.content,
+          'message_type': message.messageType,
+          'timestamp': DateTime.parse(message.timestamp!).toIso8601String(),
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    }
   }
 
   // 获取聊天记录
   static Future<List<Map<String, dynamic>>> getMessages(
-      String sender, String receiver) async {
+      int? senderId, int? receiverId, int messageNum) async {
     final db = await getDatabase();
     return await db.query(
       'messages',
-      where: '(sender = ? AND receiver = ?) OR (sender = ? AND receiver = ?)',
-      whereArgs: [sender, receiver, receiver, sender],
+      where:
+          '(sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)',
+      whereArgs: [senderId, receiverId, receiverId, senderId],
       orderBy: 'timestamp ASC',
+      limit: messageNum,
     );
   }
 }

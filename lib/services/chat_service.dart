@@ -4,6 +4,7 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:mime_type/mime_type.dart';
 import 'package:http/http.dart' as http;
 import 'package:chatapp/globals.dart';
+import 'package:chatapp/services/localsqlite.dart';
 import './friend_service.dart';
 import 'dart:convert';
 
@@ -101,6 +102,7 @@ class ChatService {
 
   static Future<List<Message>> fetchChatHistory(
       int friendId, int messageNum) async {
+    // 从node server获取未接收的聊天记录，并写入本地数据库
     final response = await http.post(
       Uri.parse('$serverUrl/api/fetchChatHistory'),
       headers: {
@@ -109,23 +111,37 @@ class ChatService {
       body: jsonEncode({
         'userId': CurrentUser.instance.userId,
         'friendId': friendId,
-        'messageNum': messageNum,
       }),
     );
 
-    if (response.statusCode == 200) {
-      final Map<String, dynamic> decodedJson = jsonDecode(response.body);
-      if (decodedJson.containsKey('messages')) {
-        final List<dynamic> data = decodedJson['messages'];
-        //logger.i(data);
-        return data.map((json) => Message.fromJson(json)).toList();
-      } else {
-        throw Exception('Key "messages" not found in response');
-      }
-    } else {
+    if (response.statusCode != 200) {
+      // fetchChatHistory失败
       logger.e(response.body);
       throw Exception('Failed to fetch chat history');
     }
+
+    final Map<String, dynamic> decodedJson = jsonDecode(response.body);
+    if (!decodedJson.containsKey('messages')) {
+      // 结果中不含有messages字段
+      throw Exception('Key "messages" not found in response');
+    }
+
+    final List<dynamic> data = decodedJson['messages'];
+    final List<Message> messages =
+        data.map((json) => Message.fromJson(json)).toList();
+    await ChatDatabase.saveMessages(messages);
+
+    // 从本地数据库获取最新的messageNum条聊天记录
+    final List<Map<String, dynamic>> localMessages =
+        await ChatDatabase.getMessages(
+            CurrentUser.instance.userId, friendId, messageNum);
+    final List<Message> messagesFromLocal =
+        localMessages.map((json) => Message.fromJson(json)).toList();
+
+    // 将获取的消息设置为已读
+    readMessage(friendId);
+
+    return messagesFromLocal;
   }
 
   static void sortMessages(List<Message> messages, {bool ascending = false}) {
