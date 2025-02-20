@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:chatapp/user/user.dart';
 import '../services/chat_service.dart';
+import 'package:chatapp/services/localsqlite.dart';
 import 'package:chatapp/globals.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -51,7 +52,7 @@ class _ChatPageState extends State<ChatPage> {
           receiverId: widget.friend.friendId,
           content: content,
           messageType: "text",
-          timestamp: DateTime.now().toIso8601String());
+          timestamp: DateTime.now().toUtc().toIso8601String());
       _messages.add(newMessage);
       _controller.clear();
       if (widget.friend.isbot == 0) {
@@ -59,6 +60,7 @@ class _ChatPageState extends State<ChatPage> {
       } else {
         ChatService.sendMessageToBot(_messages, widget.friend.friendId);
       }
+      ChatDatabase.saveMessages([newMessage]);
     });
   }
 

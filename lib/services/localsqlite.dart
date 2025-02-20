@@ -54,7 +54,8 @@ CREATE TABLE friends (
           'receiver_id': message.receiverId,
           'content': message.content,
           'message_type': message.messageType,
-          'timestamp': DateTime.parse(message.timestamp!).toIso8601String(),
+          'timestamp':
+              DateTime.parse(message.timestamp!).toUtc().toIso8601String(),
         },
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
@@ -91,6 +92,6 @@ CREATE TABLE friends (
     if (result.isEmpty) {
       return DateTime(0);
     }
-    return DateTime.parse(result.first['timestamp'] as String);
+    return DateTime.parse(result.first['timestamp'] as String).toUtc();
   }
 }
