@@ -14,7 +14,8 @@ enum DatabaseType {
 
 enum ResponseType {
   newMessage('newMessage'),
-  newFriendRequest('newFriendRequest');
+  newFriendRequest('newFriendRequest'),
+  friendRequestResponse('friendRequestResponse');
 
   final String string;
   const ResponseType(this.string);
@@ -167,6 +168,16 @@ class ChatService {
     } else if (type == ResponseType.newFriendRequest.string) {
       FriendRequest request = FriendRequest.fromMap(response);
       FriendService.instance.showFriendRequest(request);
+      _invokeCallbacks(request, type);
+    } else if (type == ResponseType.friendRequestResponse.string) {
+      final String status = response["friendRequestResponse"];
+      if (status == 'success') {
+        FriendRequest? request = friendRequestList
+            .firstWhere((request) => request.friendId == response["friendId"]);
+        Friend newFriend = Friend.fromFriendRequest(request);
+        CurrentUser.instance.friendList.insert(0, newFriend);
+        _invokeCallbacks(CurrentUser.instance.friendList, type);
+      }
     }
   }
 

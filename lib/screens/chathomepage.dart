@@ -6,7 +6,7 @@ import 'package:chatapp/globals.dart';
 import 'package:intl/intl.dart';
 import 'chat_screen.dart';
 import 'friendlist_screen.dart';
-import 'profile_screen.dart';
+//import 'profile_screen.dart';
 
 class ChatHomePage extends StatefulWidget {
   const ChatHomePage({super.key});
@@ -23,6 +23,13 @@ class _ChatHomePageState extends State<ChatHomePage> {
   void initState() {
     super.initState();
     _loadData(); // 页面初始化时加载好友列表
+    ChatService.addCallback('updateFriendList', _updateFriendList);
+  }
+
+  void _updateFriendList(List<Friend> newFriendList) {
+    setState(() {
+      _friendList = newFriendList; // 更新好友列表
+    });
   }
 
   Future<void> _loadData() async {

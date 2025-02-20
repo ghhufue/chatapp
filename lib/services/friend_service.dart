@@ -7,7 +7,6 @@ import 'dart:convert';
 class FriendService {
   FriendService._privateConstructor();
   static final FriendService instance = FriendService._privateConstructor();
-
   // 显示好友申请弹窗
   void showFriendRequest(FriendRequest friendRequest) {
     // 使用 global navigatorKey 获取 OverlayState
@@ -73,7 +72,8 @@ class FriendService {
     final response = await http.post(
       Uri.parse('$serverUrl/api/updateFriendRequest'),
       body: jsonEncode({
-        'senderId': senderId,
+        'userId': CurrentUser.instance.userId,
+        'friendId': senderId,
         'status': action,
       }),
       headers: {'Content-Type': 'application/json'},
@@ -83,6 +83,11 @@ class FriendService {
     } else {
       logger.e(response.body);
     }
+  }
+
+  Friend findFriendByInfo(FriendInfo friendInfo) {
+    return CurrentUser.instance.friendList
+        .firstWhere((friend) => friend.friendId == friendInfo.friendId);
   }
 }
 
