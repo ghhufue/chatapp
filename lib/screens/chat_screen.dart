@@ -24,6 +24,12 @@ class _ChatPageState extends State<ChatPage> {
     super.initState();
     _loadMessages();
     ChatService.addCallback('newMessage', _receiveMessage);
+    // 发送消息后自动滚动到底部
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+      }
+    });
   }
 
   // load messages
@@ -52,12 +58,6 @@ class _ChatPageState extends State<ChatPage> {
         ChatService.sendMessage(content, "text", widget.friend.friendId);
       } else {
         ChatService.sendMessageToBot(_messages, widget.friend.friendId);
-      }
-    });
-    // 发送消息后自动滚动到底部
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
-        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
       }
     });
   }
@@ -294,11 +294,17 @@ class _ChatPageState extends State<ChatPage> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        onPressed: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) =>
-                                    ChatImagePage(friend: widget.friend))),
+                        onPressed: () async {
+                          // TODO: Fix this
+                          await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => ChatImagePage(
+                                      friend: widget.friend,
+                                      messages: _messages)));
+
+                          setState(() {}); // 更新界面
+                        },
                         child: Center(child: Icon(Icons.image)))),
                 SizedBox(width: 8),
                 SizedBox(
