@@ -27,7 +27,7 @@ CREATE TABLE messages (
     is_sender BOOLEAN DEFAULT TRUE,                
     content TEXT NOT NULL,                     
     message_type TEXT DEFAULT 'text',
-    timestamp DATETIME NOT NULL
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 CREATE TABLE friends (
     user_id INT NOT NULL, 
@@ -70,8 +70,27 @@ CREATE TABLE friends (
       where:
           '(sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)',
       whereArgs: [senderId, receiverId, receiverId, senderId],
-      orderBy: 'timestamp ASC',
+      orderBy: 'timestamp DESC',
       limit: messageNum,
     );
+  }
+
+  // 获取本地数据库中最新消息的时间戳
+  static Future<DateTime> getLatestMessageTimestamp(
+      int? senderId, int? receiverId) async {
+    final db = await getDatabase();
+    final result = await db.query(
+      'messages',
+      columns: ['timestamp'],
+      where:
+          '(sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)',
+      whereArgs: [senderId, receiverId, receiverId, senderId],
+      orderBy: 'timestamp DESC',
+      limit: 1,
+    );
+    if (result.isEmpty) {
+      return DateTime(0);
+    }
+    return DateTime.parse(result.first['timestamp'] as String);
   }
 }
