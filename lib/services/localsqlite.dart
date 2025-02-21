@@ -21,10 +21,9 @@ class ChatDatabase {
           onCreate: (db, version) {
             db.execute('''
 CREATE TABLE messages (
-    message_id INTEGER PRIMARY KEY AUTOINCREMENT, 
+    message_id INTEGER PRIMARY KEY, 
     sender_id INTEGER NOT NULL,                   
-    receiver_id INTEGER NOT NULL,  
-    is_sender BOOLEAN DEFAULT TRUE,                
+    receiver_id INTEGER NOT NULL,                
     content TEXT NOT NULL,                     
     message_type TEXT DEFAULT 'text',
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP

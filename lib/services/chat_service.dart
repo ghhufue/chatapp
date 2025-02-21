@@ -15,7 +15,8 @@ enum DatabaseType {
 
 enum ResponseType {
   newMessage('newMessage'),
-  newFriendRequest('newFriendRequest');
+  newFriendRequest('newFriendRequest'),
+  timestampReturn('timestampReturn');
 
   final String string;
   const ResponseType(this.string);
@@ -179,11 +180,26 @@ class ChatService {
     logger.i(response);
     final String type = response["type"];
     if (type == ResponseType.newMessage.string) {
-      Message receivedMessage = getMessage(response);
+      final receivedMessage = Message(
+          messageId: response["messageId"],
+          senderId: response["senderId"],
+          receiverId: response["receiverId"],
+          content: response["content"],
+          messageType: response["messageType"],
+          timestamp: response["timestamp"]);
       _invokeCallbacks(receivedMessage, type);
     } else if (type == ResponseType.newFriendRequest.string) {
       FriendRequest request = FriendRequest.fromMap(response);
       FriendService.instance.showFriendRequest(request);
+    } else if (type == ResponseType.timestampReturn.string) {
+      final returnedMessage = Message(
+          messageId: response["messageId"],
+          senderId: response["senderId"],
+          receiverId: response["receiverId"],
+          content: response["content"],
+          messageType: response["messageType"],
+          timestamp: response["timestamp"]);
+      _invokeCallbacks(returnedMessage, type);
     }
   }
 

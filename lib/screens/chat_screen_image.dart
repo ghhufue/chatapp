@@ -82,7 +82,6 @@ class _ChatImagePageState extends State<ChatImagePage> {
       } else if (comment.isEmpty) {
         ChatService.sendMessageToBot(widget.messages, widget.friend.friendId);
       }
-      ChatDatabase.saveMessages([newMessage]);
 
       // 插入comment（如果有）
       if (comment.isNotEmpty) {
@@ -100,7 +99,6 @@ class _ChatImagePageState extends State<ChatImagePage> {
         } else {
           ChatService.sendMessageToBot(widget.messages, widget.friend.friendId);
         }
-        ChatDatabase.saveMessages([newMessage]);
       }
     } catch (e) {
       logger.e('Upload failed: ${e.toString()}');
