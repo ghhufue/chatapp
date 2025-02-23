@@ -24,9 +24,7 @@ class _ChatPageState extends State<ChatPage> {
   void initState() {
     super.initState();
     _loadMessages();
-    ChatService.addCallback('newMessage', _receiveMessage);
-    ChatService.addCallback('messageReturn', _receiveMessage);
-    // 发送消息后自动滚动到底部
+    ChatService.addCallback('updateMessages', _receiveMessage);
   }
 
   // load messages
@@ -41,15 +39,6 @@ class _ChatPageState extends State<ChatPage> {
   void _sendMessage(String content) {
     if (content.isEmpty) return;
     setState(() {
-      final messageId = _messages.length + 1;
-      final newMessage = Message(
-          messageId: messageId,
-          senderId: CurrentUser.instance.userId,
-          receiverId: widget.friend.friendId,
-          content: content,
-          messageType: "text",
-          timestamp: DateTime.now().toUtc().toIso8601String());
-      _messages.add(newMessage);
       _controller.clear();
       if (widget.friend.isbot == 0) {
         ChatService.sendMessage(content, "text", widget.friend.friendId);

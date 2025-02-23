@@ -16,7 +16,8 @@ enum DatabaseType {
 enum ResponseType {
   newMessage('newMessage'),
   newFriendRequest('newFriendRequest'),
-  timestampReturn('timestampReturn');
+  messageReturn('messageReturn'),
+  socketError('socketError');
 
   final String string;
   const ResponseType(this.string);
@@ -180,26 +181,30 @@ class ChatService {
     logger.i(response);
     final String type = response["type"];
     if (type == ResponseType.newMessage.string) {
+      logger.i('Received new message');
       final receivedMessage = Message(
-          messageId: response["messageId"],
-          senderId: response["senderId"],
-          receiverId: response["receiverId"],
+          messageId: response["message_id"],
+          senderId: response["sender_id"],
+          receiverId: CurrentUser.instance.userId,
           content: response["content"],
-          messageType: response["messageType"],
+          messageType: response["message_type"],
           timestamp: response["timestamp"]);
-      _invokeCallbacks(receivedMessage, type);
+      _invokeCallbacks(receivedMessage, 'updateMessages');
     } else if (type == ResponseType.newFriendRequest.string) {
       FriendRequest request = FriendRequest.fromMap(response);
       FriendService.instance.showFriendRequest(request);
-    } else if (type == ResponseType.timestampReturn.string) {
+    } else if (type == ResponseType.messageReturn.string) {
+      logger.i('Received message return');
       final returnedMessage = Message(
-          messageId: response["messageId"],
-          senderId: response["senderId"],
-          receiverId: response["receiverId"],
+          messageId: response["message_id"],
+          senderId: CurrentUser.instance.userId,
+          receiverId: response["receiver_id"],
           content: response["content"],
-          messageType: response["messageType"],
+          messageType: response["message_type"],
           timestamp: response["timestamp"]);
-      _invokeCallbacks(returnedMessage, type);
+      _invokeCallbacks(returnedMessage, 'updateMessages');
+    } else if (type == ResponseType.socketError.string) {
+      logger.e('WebSocket error: ${response["error"]}');
     }
   }
 

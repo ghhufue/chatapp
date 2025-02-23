@@ -1,6 +1,5 @@
 import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart';
 import 'package:chatapp/user/user.dart';
 import 'package:chatapp/globals.dart';
 
@@ -26,12 +25,12 @@ CREATE TABLE messages (
     receiver_id INTEGER NOT NULL,                
     content TEXT NOT NULL,                     
     message_type TEXT DEFAULT 'text',
-    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    timestamp VARCHAR(63)
 );
 CREATE TABLE friends (
     user_id INT NOT NULL, 
     friend_id INT NOT NULL, 
-    status ENUM('pending', 'accepted', 'blocked') DEFAULT 'pending', 
+    status TEXT NOT NULL DEFAULT 'pending', 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (user_id, friend_id)
 );
@@ -46,15 +45,17 @@ CREATE TABLE friends (
   static Future<void> saveMessages(List<Message> messages) async {
     final db = await getDatabase();
     for (final message in messages) {
+      logger.i(
+          'Saving message to local database, id: ${message.messageId}, type: ${message.messageType}, timestamp: ${message.timestamp}, sender_id: ${message.senderId}, receiver_id: ${message.receiverId}');
       await db.insert(
         'messages',
         {
+          'message_id': message.messageId,
           'sender_id': message.senderId,
           'receiver_id': message.receiverId,
           'content': message.content,
           'message_type': message.messageType,
-          'timestamp':
-              DateTime.parse(message.timestamp!).toUtc().toIso8601String(),
+          'timestamp': message.timestamp,
         },
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
