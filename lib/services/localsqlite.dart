@@ -76,22 +76,21 @@ CREATE TABLE friends (
     );
   }
 
-  // 获取本地数据库中最新消息的时间戳
-  static Future<DateTime> getLatestMessageTimestamp(
-      int? senderId, int? receiverId) async {
+  // 获取本地数据库中最新消息的id
+  static Future<int> getLatestMessageId(int? senderId, int? receiverId) async {
     final db = await getDatabase();
     final result = await db.query(
       'messages',
-      columns: ['timestamp'],
+      columns: ['message_id'],
       where:
           '(sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)',
       whereArgs: [senderId, receiverId, receiverId, senderId],
-      orderBy: 'timestamp DESC',
+      orderBy: 'message_id DESC',
       limit: 1,
     );
     if (result.isEmpty) {
-      return DateTime(0);
+      return 0;
     }
-    return DateTime.parse(result.first['timestamp'] as String).toUtc();
+    return result.first['message_id'] as int;
   }
 }

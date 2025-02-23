@@ -31,7 +31,7 @@ class _ChatPageState extends State<ChatPage> {
   void _loadMessages() {
     setState(() {
       _messages = widget.friend.historyMessage;
-      _messages.sort((a, b) => b.messageId!.compareTo(a.messageId!));
+      _messages.sort((a, b) => a.messageId!.compareTo(b.messageId!));
     });
   }
 
@@ -53,7 +53,7 @@ class _ChatPageState extends State<ChatPage> {
     setState(() {
       _messages.add(newMessage);
       _messages
-          .sort((a, b) => b.messageId!.compareTo(a.messageId!)); // 保证按时间顺序排列
+          .sort((a, b) => a.messageId!.compareTo(b.messageId!)); // 保证按id升序排列
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {

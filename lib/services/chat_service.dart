@@ -104,8 +104,8 @@ class ChatService {
 
   static Future<List<Message>> fetchChatHistory(
       int friendId, int messageNum) async {
-    // 从本地数据库获取最新消息的时间戳，这将作为从node server获取聊天记录的起始时间
-    final latestMessageTimestamp = await ChatDatabase.getLatestMessageTimestamp(
+    // 从本地数据库获取最新消息的id，这将作为从node server获取聊天记录的起点
+    final latestMessageId = await ChatDatabase.getLatestMessageId(
         CurrentUser.instance.userId, friendId);
 
     // 从node server获取未接收的聊天记录，并写入本地数据库
@@ -117,7 +117,7 @@ class ChatService {
       body: jsonEncode({
         'userId': CurrentUser.instance.userId,
         'friendId': friendId,
-        'afterTime': latestMessageTimestamp.toIso8601String(),
+        'afterId': latestMessageId,
       }),
     );
 
