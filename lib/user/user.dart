@@ -2,12 +2,14 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../services/chat_service.dart';
 import 'package:chatapp/globals.dart';
+import '../services/friend_service.dart';
 
 class CurrentUser {
   int? userId;
   String? nickname;
   String? token;
   List<Friend> friendList = [];
+  List<FriendInfo> friendInfoList = [];
   CurrentUser._privateConstructor();
   static final CurrentUser instance = CurrentUser._privateConstructor();
   void clear() {
@@ -57,7 +59,8 @@ class CurrentUser {
         }
       }).toList();
       await Future.wait(tasks);
-
+      friendInfoList =
+          friendList.map((friend) => FriendInfo.fromFriend(friend)).toList();
       logger.i("All friends' messages loaded successfully.");
     } catch (e) {
       logger.e('Failed to load messages concurrently: $e');
@@ -91,6 +94,57 @@ class Friend {
               .toList() ??
           [],
     );
+  }
+  factory Friend.fromFriendRequest(FriendRequest request) {
+    // 假设 isbot 默认为 0（不是机器人），可以根据实际情况调整
+    return Friend(
+      friendId: request.friendId,
+      nickname: request.nickname,
+      avatar: request.avatar,
+      isbot: 0, // 假设好友都不是机器人，你可以根据实际情况修改
+      historyMessage: [
+        Message(
+            messageId: 0,
+            senderId: request.friendId,
+            receiverId: CurrentUser.instance.userId,
+            content: request.description ?? '',
+            messageType: 'text',
+            timestamp: DateTime.now().toIso8601String())
+      ], // 使用 description 创建一条 Message
+    );
+  }
+}
+
+// 只储存朋友的信息，不包括聊天信息
+class FriendInfo {
+  int? friendId;
+  String? nickname;
+  String? avatar;
+  int? isbot;
+
+  FriendInfo({
+    required this.friendId,
+    required this.nickname,
+    required this.avatar,
+    required this.isbot,
+  });
+
+  factory FriendInfo.fromFriend(Friend friend) {
+    return FriendInfo(
+      friendId: friend.friendId,
+      nickname: friend.nickname,
+      avatar: friend.avatar,
+      isbot: friend.isbot,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'friend_id': friendId,
+      'nickname': nickname,
+      'avatar': avatar,
+      'isbot': isbot,
+    };
   }
 }
 

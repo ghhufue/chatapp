@@ -1,13 +1,14 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:chatapp/globals.dart';
+//import 'package:chatapp/globals.dart';
 import 'package:chatapp/user/user.dart';
 import 'package:chatapp/screens/chat_screen.dart';
 import 'package:chatapp/services/chat_service.dart';
+import 'package:chatapp/services/friend_service.dart';
 
 class ProfileScreen extends StatefulWidget {
-  final Friend friend;
-  ProfileScreen({super.key, required this.friend});
+  final FriendInfo friendinfo;
+  ProfileScreen({super.key, required this.friendinfo});
 
   @override
   _ProfileScreenState createState() => _ProfileScreenState();
@@ -34,12 +35,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Center(
                       child: CircleAvatar(
                     radius: 50,
-                    child: (widget.friend.avatar != null &&
-                            widget.friend.avatar! != "")
+                    child: (widget.friendinfo.avatar != null &&
+                            widget.friendinfo.avatar! != "")
                         ? ClipOval(
                             child: FutureBuilder<Uint8List>(
                               future: ChatService.downloadImage(
-                                  objectKey: widget.friend.avatar!),
+                                  objectKey: widget.friendinfo.avatar!),
                               builder: (context, snapshot) {
                                 if (snapshot.connectionState ==
                                     ConnectionState.waiting) {
@@ -72,15 +73,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   SizedBox(height: 10),
                   Center(
                       child: Text(
-                    widget.friend.friendId == CurrentUser.instance.userId
-                        ? "${widget.friend.nickname!} (me)"
-                        : widget.friend.nickname!,
+                    widget.friendinfo.friendId == CurrentUser.instance.userId
+                        ? "${widget.friendinfo.nickname!} (me)"
+                        : widget.friendinfo.nickname!,
                     style: TextStyle(fontSize: 50),
                   )),
                   SizedBox(height: 10),
                   Center(
                       child: Text(
-                    "${widget.friend.friendId}",
+                    "${widget.friendinfo.friendId}",
                     style: TextStyle(fontSize: 30, color: Colors.grey),
                   )),
                 ],
@@ -93,7 +94,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: SizedBox(
                     height: 60,
                     child: CurrentUser.instance.userId ==
-                            widget.friend.friendId // 是否是自己
+                            widget.friendinfo.friendId // 是否是自己
                         ? Row(
                             children: [
                               Expanded(
@@ -130,15 +131,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         context,
                                         MaterialPageRoute(
                                             builder: (context) => ChatPage(
-                                                friend: widget.friend))),
+                                                friend: FriendService.instance
+                                                    .findFriendByInfo(
+                                                        widget.friendinfo)))),
                                     child: Center(
                                         child: Text('Go to chat',
                                             style: TextStyle(fontSize: 20)))),
                               )
                             ],
                           )
-                        : CurrentUser.instance.friendList
-                                .contains(widget.friend) // 是否是好友
+                        : CurrentUser.instance.friendInfoList
+                                .contains(widget.friendinfo) // 是否是好友
                             ? Row(
                                 children: [
                                   Expanded(
@@ -155,7 +158,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                             context,
                                             MaterialPageRoute(
                                                 builder: (context) => ChatPage(
-                                                    friend: widget.friend))),
+                                                    friend: FriendService
+                                                        .instance
+                                                        .findFriendByInfo(widget
+                                                            .friendinfo)))),
                                         child: Center(
                                             child: Text('Go to chat',
                                                 style:

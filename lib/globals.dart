@@ -1,12 +1,14 @@
 import 'package:flutter/foundation.dart';
 import 'package:logger/logger.dart';
 import 'package:flutter/material.dart';
+import './services/friend_service.dart';
 import 'dart:io';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 final Logger logger = Logger(); // 全局日志工具
 late String serverUrl; // 全局服务器地址
 late String wsUrl;
+List<FriendRequest> friendRequestList = [];
 const maxMessageNum = 10;
 void setServerUrl() {
   if (kIsWeb) {
