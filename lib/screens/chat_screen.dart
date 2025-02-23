@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:chatapp/user/user.dart';
 import '../services/chat_service.dart';
+import 'package:chatapp/services/localsqlite.dart';
 import 'package:chatapp/globals.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -23,14 +24,14 @@ class _ChatPageState extends State<ChatPage> {
   void initState() {
     super.initState();
     _loadMessages();
-    ChatService.addCallback('newMessage', _receiveMessage);
+    ChatService.addCallback('updateMessages', _receiveMessage);
   }
 
   // load messages
   void _loadMessages() {
     setState(() {
       _messages = widget.friend.historyMessage;
-      _messages.sort((a, b) => b.messageId!.compareTo(a.messageId!));
+      _messages.sort((a, b) => a.messageId!.compareTo(b.messageId!));
     });
   }
 
@@ -38,15 +39,6 @@ class _ChatPageState extends State<ChatPage> {
   void _sendMessage(String content) {
     if (content.isEmpty) return;
     setState(() {
-      final messageId = _messages.length + 1;
-      final newMessage = Message(
-          messageId: messageId,
-          senderId: CurrentUser.instance.userId,
-          receiverId: widget.friend.friendId,
-          content: content,
-          messageType: "text",
-          timestamp: DateTime.now().toIso8601String());
-      _messages.add(newMessage);
       _controller.clear();
       if (widget.friend.isbot == 0) {
         ChatService.sendMessage(content, "text", widget.friend.friendId);
@@ -54,20 +46,19 @@ class _ChatPageState extends State<ChatPage> {
         ChatService.sendMessageToBot(_messages, widget.friend.friendId);
       }
     });
-    // 发送消息后自动滚动到底部
+  }
+
+  void _receiveMessage(Message newMessage) {
+    ChatDatabase.saveMessages([newMessage]);
+    setState(() {
+      _messages.add(newMessage);
+      _messages
+          .sort((a, b) => a.messageId!.compareTo(b.messageId!)); // 保证按id升序排列
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
         _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
       }
-    });
-  }
-
-  void _receiveMessage(Message newMessage) {
-    setState(() {
-      newMessage.messageId = _messages.length + 1;
-      _messages.add(newMessage);
-      _messages
-          .sort((a, b) => b.messageId!.compareTo(a.messageId!)); // 保证按时间顺序排列
     });
   }
 
@@ -296,8 +287,9 @@ class _ChatPageState extends State<ChatPage> {
                         onPressed: () => Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) =>
-                                    ChatImagePage(friend: widget.friend))),
+                                builder: (context) => ChatImagePage(
+                                    friend: widget.friend,
+                                    messages: _messages))),
                         child: Center(child: Icon(Icons.image)))),
                 SizedBox(width: 8),
                 SizedBox(

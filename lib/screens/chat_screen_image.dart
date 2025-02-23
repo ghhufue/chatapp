@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import '../user/user.dart';
 import '../services/chat_service.dart';
+import 'package:chatapp/services/localsqlite.dart';
 import '../globals.dart';
 
+//ignore: must_be_immutable
 class ChatImagePage extends StatefulWidget {
   final Friend friend;
-  ChatImagePage({super.key, required this.friend});
+  List<Message> messages;
+  ChatImagePage({super.key, required this.friend, required this.messages});
 
   @override
   _ChatImagePageState createState() => _ChatImagePageState();
@@ -17,7 +20,6 @@ class _ChatImagePageState extends State<ChatImagePage> {
   PlatformFile? _selectedFile;
   var fileEmpty = true;
   var isUploading = false;
-  List<Message> messages = [];
   String? suffix = "";
 
   @override
@@ -66,7 +68,7 @@ class _ChatImagePageState extends State<ChatImagePage> {
           objectKey: objectKey, fileBytes: _selectedFile!.bytes!);
 
       // 插入一条图片消息
-      final messageId = messages.length + 1;
+      final messageId = widget.messages.length + 1;
       final newMessage = Message(
           messageId: messageId,
           senderId: CurrentUser.instance.userId,
@@ -74,16 +76,16 @@ class _ChatImagePageState extends State<ChatImagePage> {
           content: objectKey,
           messageType: "image",
           timestamp: timestamp.toString());
-      messages.add(newMessage);
+      widget.messages.add(newMessage);
       if (widget.friend.isbot == 0) {
         ChatService.sendMessage(objectKey, "image", widget.friend.friendId);
       } else if (comment.isEmpty) {
-        ChatService.sendMessageToBot(messages, widget.friend.friendId);
+        ChatService.sendMessageToBot(widget.messages, widget.friend.friendId);
       }
 
       // 插入comment（如果有）
       if (comment.isNotEmpty) {
-        final messageId = messages.length + 1;
+        final messageId = widget.messages.length + 1;
         final newMessage = Message(
             messageId: messageId,
             senderId: CurrentUser.instance.userId,
@@ -91,11 +93,11 @@ class _ChatImagePageState extends State<ChatImagePage> {
             content: comment,
             messageType: "text",
             timestamp: timestamp.toString());
-        messages.add(newMessage);
+        widget.messages.add(newMessage);
         if (widget.friend.isbot == 0) {
           ChatService.sendMessage(comment, "text", widget.friend.friendId);
         } else {
-          ChatService.sendMessageToBot(messages, widget.friend.friendId);
+          ChatService.sendMessageToBot(widget.messages, widget.friend.friendId);
         }
       }
     } catch (e) {

@@ -44,6 +44,8 @@ dependencies:
   url_launcher:
   file_picker:
   mime_type: ^1.0.0
+  path_provider:
+  sqflite_common_ffi_web:
 
 dev_dependencies:
   flutter_test:
